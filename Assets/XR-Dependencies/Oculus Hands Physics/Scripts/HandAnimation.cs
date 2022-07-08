@@ -105,10 +105,6 @@ public class HandAnimation : MonoBehaviour
             leftHandAnimator.SetFloat("Grip", 0f);
         }
 
-
-        
-        
-
         if (rightGripVal > 0f)
         {
             rightHandAnimator.SetFloat("Grip", rightGripVal);
