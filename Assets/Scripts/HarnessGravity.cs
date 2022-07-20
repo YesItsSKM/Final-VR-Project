@@ -30,6 +30,9 @@ public class HarnessGravity : MonoBehaviour
             obj = hit.transform;
             objRigidBody = hit.rigidbody;
 
+            if (!objRigidBody.useGravity)
+                objRigidBody.useGravity = true;
+
             distanceToPlayer = Vector3.Distance(obj.position, transform.position);
 
             if (distanceToPlayer <= influenceRange)
@@ -37,6 +40,25 @@ public class HarnessGravity : MonoBehaviour
                 pullForce = (transform.position - obj.position).normalized / distanceToPlayer * intensity;
                 objRigidBody.AddForce(pullForce, ForceMode.Force);
             }
+            
+        }
+
+        if (rightHandRay.TryGetCurrent3DRaycastHit(out RaycastHit rHit) && (rHit.transform.tag == "Interactable"))
+        {
+            obj = rHit.transform;
+            objRigidBody = rHit.rigidbody;
+
+            if (!objRigidBody.useGravity)
+                objRigidBody.useGravity = true;
+
+            distanceToPlayer = Vector3.Distance(obj.position, transform.position);
+
+            if (distanceToPlayer <= influenceRange)
+            {
+                pullForce = (transform.position - obj.position).normalized / distanceToPlayer * intensity;
+                objRigidBody.AddForce(pullForce, ForceMode.Force);
+            }
+
         }
     }
 }
