@@ -44,13 +44,16 @@ public class VRRig : MonoBehaviour
     }
 
     // Update is called once per frame
+    void Update()
+    {
+        leftArm.MapHand();
+        rightArm.MapHand();
+    }
+
     void LateUpdate()
     {
         vrBody.transform.position = headConstraint.position + headBodyOffset;
         vrBody.transform.forward = Vector3.Lerp(vrBody.transform.forward, Vector3.ProjectOnPlane(headConstraint.up, Vector3.up).normalized, Time.deltaTime * turnSmoothness);
-
-        leftArm.MapHand();
-        rightArm.MapHand();
 
         head.MapHead();
     }
