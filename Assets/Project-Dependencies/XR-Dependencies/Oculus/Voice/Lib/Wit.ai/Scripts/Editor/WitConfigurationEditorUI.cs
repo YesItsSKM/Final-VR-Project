@@ -1,5 +1,6 @@
 ﻿/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,25 +26,22 @@ namespace Facebook.WitAi
         {
             // Refresh configurations if needed
             WitConfiguration[] witConfigs = WitConfigurationUtility.WitConfigs;
-            if (witConfigs == null)
+            if (witConfigs == null || witConfigs.Length == 0)
             {
-                WitConfigurationUtility.ReloadConfigurationData();
-                witConfigs = WitConfigurationUtility.WitConfigs;
-            }
-
-            // Error if none found
-            if (witConfigs.Length == 0)
-            {
-                WitEditorUI.LayoutErrorLabel(WitStyles.Texts.ConfigurationSelectMissingLabel);
+                WitEditorUI.LayoutErrorLabel(WitTexts.Texts.ConfigurationSelectMissingLabel);
                 return;
             }
 
             // Clamp Config Index
-            configIndex = Mathf.Clamp(configIndex, 0, witConfigs.Length);
+            bool configUpdated = false;
+            if (configIndex < 0 || configIndex >= witConfigs.Length)
+            {
+                configUpdated = true;
+                configIndex = Mathf.Clamp(configIndex, 0, witConfigs.Length);
+            }
 
             // Layout popup
-            bool configUpdated = false;
-            WitEditorUI.LayoutPopup(WitStyles.Texts.ConfigurationSelectLabel, WitConfigurationUtility.WitConfigNames, ref configIndex, ref configUpdated);
+            WitEditorUI.LayoutPopup(WitTexts.Texts.ConfigurationSelectLabel, WitConfigurationUtility.WitConfigNames, ref configIndex, ref configUpdated);
         }
     }
 }

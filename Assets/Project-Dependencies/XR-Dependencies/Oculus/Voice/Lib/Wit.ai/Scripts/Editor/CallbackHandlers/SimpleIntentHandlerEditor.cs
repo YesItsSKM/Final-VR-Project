@@ -1,5 +1,6 @@
 ﻿/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +14,7 @@ using UnityEngine;
 
 namespace Facebook.WitAi.CallbackHandlers
 {
+    [CustomEditor(typeof(SimpleIntentHandler))]
     public class SimpleIntentHandlerEditor : Editor
     {
         private SimpleIntentHandler handler;
@@ -52,8 +54,17 @@ namespace Facebook.WitAi.CallbackHandlers
 
             GUILayout.Space(16);
 
+            var allowConfidenceOverlap = serializedObject.FindProperty("allowConfidenceOverlap");
+            EditorGUILayout.PropertyField(allowConfidenceOverlap);
+
+            var confidenceRanges = serializedObject.FindProperty("confidenceRanges");
+            EditorGUILayout.PropertyField(confidenceRanges);
+
+            GUILayout.Space(16);
+
             var eventProperty = serializedObject.FindProperty("onIntentTriggered");
             EditorGUILayout.PropertyField(eventProperty);
+
             serializedObject.ApplyModifiedProperties();
         }
     }
