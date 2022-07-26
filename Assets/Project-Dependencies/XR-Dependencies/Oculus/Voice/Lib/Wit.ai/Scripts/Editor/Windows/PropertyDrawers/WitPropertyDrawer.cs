@@ -1,6 +1,5 @@
 ﻿/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -214,7 +213,8 @@ namespace Facebook.WitAi.Windows
         public const string LocalizedMissingKey = "missing";
         protected virtual string GetLocalizedText(SerializedProperty property, string key)
         {
-            return property.displayName;
+            Debug.Log("Missing Localization: " + key);
+            return key;
         }
         // Way to ignore certain properties
         protected virtual bool ShouldLayoutField(SerializedProperty property, FieldInfo subfield)

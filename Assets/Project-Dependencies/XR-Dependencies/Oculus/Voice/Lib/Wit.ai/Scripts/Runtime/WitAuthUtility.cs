@@ -1,15 +1,11 @@
 ﻿/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Facebook.WitAi.Data.Configuration;
 using UnityEngine;
 
@@ -21,7 +17,6 @@ namespace Facebook.WitAi
 {
     public class WitAuthUtility
     {
-        private static string serverToken;
         public static ITokenValidationProvider tokenValidator = new DefaultTokenValidatorProvider();
 
         public static bool IsServerTokenValid()
@@ -34,25 +29,27 @@ namespace Facebook.WitAi
             return tokenValidator.IsServerTokenValid(token);
         }
 
+        private static string serverToken;
+
         public static string GetAppServerToken(WitConfiguration configuration,
             string defaultValue = "")
         {
             return GetAppServerToken(configuration?.application?.id, defaultValue);
         }
 
-        public static string GetAppServerToken(string appId, string defaultServerToken = "")
+        public static string GetAppServerToken(string appId, string defaultValue = "")
         {
 #if UNITY_EDITOR
-            return WitSettingsUtility.GetServerToken(appId, defaultServerToken);
+            return EditorPrefs.GetString("Wit::AppIdToToken::" + appId, defaultValue);
 #else
         return "";
 #endif
         }
 
-        public static string GetAppId(string serverToken, string defaultAppID = "")
+        public static string GetAppId(string serverToken, string defaultValue = "")
         {
 #if UNITY_EDITOR
-            return WitSettingsUtility.GetServerTokenAppID(serverToken, defaultAppID);
+            return EditorPrefs.GetString("Wit::TokenToAppId::" + serverToken, defaultValue);
 #else
         return "";
 #endif
@@ -61,11 +58,16 @@ namespace Facebook.WitAi
         public static void SetAppServerToken(string appId, string token)
         {
 #if UNITY_EDITOR
-            WitSettingsUtility.SetServerToken(appId, token);
+            EditorPrefs.SetString("Wit::AppIdToToken::" + appId, token);
+            EditorPrefs.SetString("Wit::TokenToAppId::" + token, appId);
 #endif
         }
 
-        public const string SERVER_TOKEN_ID = "SharedServerToken";
+        private static void SavePrefs()
+        {
+
+        }
+
         public static string ServerToken
         {
 #if UNITY_EDITOR
@@ -73,14 +75,24 @@ namespace Facebook.WitAi
             {
                 if (null == serverToken)
                 {
-                    serverToken = WitSettingsUtility.GetServerToken(SERVER_TOKEN_ID);
+                    try
+                    {
+                        serverToken = EditorPrefs.GetString("Wit::ServerToken", "");
+                    }
+                    catch (Exception e)
+                    {
+                        // This will happen if we don't prime the server token on the main thread and
+                        // we access the server token editorpref value in a request.
+                        Debug.LogError(e.Message);
+                    }
                 }
+
                 return serverToken;
             }
             set
             {
                 serverToken = value;
-                WitSettingsUtility.SetServerToken(SERVER_TOKEN_ID, serverToken);
+                EditorPrefs.SetString("Wit::ServerToken", serverToken);
             }
 #else
         get => "";
@@ -105,5 +117,15 @@ namespace Facebook.WitAi
             bool IsTokenValid(string appId, string token);
             bool IsServerTokenValid(string serverToken);
         }
+
+#if UNITY_EDITOR
+        public static void InitEditorTokens()
+        {
+            if (null == serverToken)
+            {
+                serverToken = EditorPrefs.GetString("Wit::ServerToken", "");
+            }
+        }
+#endif
     }
 }

@@ -1,22 +1,14 @@
-﻿/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+﻿/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
 
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -42,14 +34,11 @@ namespace Oculus.Interaction
         private UnityEvent _whenSelect;
         [SerializeField]
         private UnityEvent _whenUnselect;
+
         [SerializeField]
-        private UnityEvent _whenInteractorViewAdded;
+        private UnityEvent _whenInteractorsCountUpdated;
         [SerializeField]
-        private UnityEvent _whenInteractorViewRemoved;
-        [SerializeField]
-        private UnityEvent _whenSelectingInteractorViewAdded;
-        [SerializeField]
-        private UnityEvent _whenSelectingInteractorViewRemoved;
+        private UnityEvent _whenSelectingInteractorsCountUpdated;
 
         #region Properties
 
@@ -57,10 +46,8 @@ namespace Oculus.Interaction
         public UnityEvent WhenUnhover => _whenUnhover;
         public UnityEvent WhenSelect => _whenSelect;
         public UnityEvent WhenUnselect => _whenUnselect;
-        public UnityEvent WhenInteractorViewAdded => _whenInteractorViewAdded;
-        public UnityEvent WhenInteractorViewRemoved => _whenInteractorViewRemoved;
-        public UnityEvent WhenSelectingInteractorViewAdded => _whenSelectingInteractorViewAdded;
-        public UnityEvent WhenSelectingInteractorViewRemoved => _whenSelectingInteractorViewRemoved;
+        public UnityEvent WhenInteractorsCountUpdated => _whenInteractorsCountUpdated;
+        public UnityEvent WhenSelectingInteractorsCountUpdated => _whenSelectingInteractorsCountUpdated;
 
         #endregion
 
@@ -83,10 +70,8 @@ namespace Oculus.Interaction
             if (_started)
             {
                 InteractableView.WhenStateChanged += HandleStateChanged;
-                InteractableView.WhenInteractorViewAdded += HandleInteractorViewAdded;
-                InteractableView.WhenInteractorViewRemoved += HandleInteractorViewRemoved;
-                InteractableView.WhenSelectingInteractorViewAdded += HandleSelectingInteractorViewAdded;
-                InteractableView.WhenSelectingInteractorViewRemoved += HandleSelectingInteractorViewRemoved;
+                InteractableView.WhenInteractorsCountUpdated += HandleInteractorsCountUpdated;
+                InteractableView.WhenSelectingInteractorsCountUpdated += HandleSelectingInteractorsCountUpdated;
             }
         }
 
@@ -95,11 +80,8 @@ namespace Oculus.Interaction
             if (_started)
             {
                 InteractableView.WhenStateChanged -= HandleStateChanged;
-                InteractableView.WhenStateChanged -= HandleStateChanged;
-                InteractableView.WhenInteractorViewAdded -= HandleInteractorViewAdded;
-                InteractableView.WhenInteractorViewRemoved -= HandleInteractorViewRemoved;
-                InteractableView.WhenSelectingInteractorViewAdded -= HandleSelectingInteractorViewAdded;
-                InteractableView.WhenSelectingInteractorViewRemoved -= HandleSelectingInteractorViewRemoved;
+                InteractableView.WhenInteractorsCountUpdated -= HandleInteractorsCountUpdated;
+                InteractableView.WhenSelectingInteractorsCountUpdated -= HandleSelectingInteractorsCountUpdated;
             }
         }
 
@@ -135,29 +117,20 @@ namespace Oculus.Interaction
             }
         }
 
-        private void HandleInteractorViewAdded(IInteractorView interactorView)
+        private void HandleInteractorsCountUpdated()
         {
-            WhenInteractorViewAdded.Invoke();
+            _whenInteractorsCountUpdated.Invoke();
         }
 
-        private void HandleInteractorViewRemoved(IInteractorView interactorView)
+        private void HandleSelectingInteractorsCountUpdated()
         {
-            WhenInteractorViewRemoved.Invoke();
-        }
-
-        private void HandleSelectingInteractorViewAdded(IInteractorView interactorView)
-        {
-            WhenSelectingInteractorViewAdded.Invoke();
-        }
-
-        private void HandleSelectingInteractorViewRemoved(IInteractorView interactorView)
-        {
-            WhenSelectingInteractorViewRemoved.Invoke();
+            _whenSelectingInteractorsCountUpdated.Invoke();
         }
 
         #region Inject
 
-        public void InjectAllInteractableUnityEventWrapper(IInteractableView interactableView)
+        public void InjectAllInteractableUnityEventWrapper(
+            IInteractableView<IInteractorView> interactableView)
         {
             InjectInteractableView(interactableView);
         }

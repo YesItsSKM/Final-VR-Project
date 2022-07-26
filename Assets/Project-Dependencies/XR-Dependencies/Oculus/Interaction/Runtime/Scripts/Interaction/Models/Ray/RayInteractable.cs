@@ -1,30 +1,23 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
+using System;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Oculus.Interaction.Surfaces;
 
 namespace Oculus.Interaction
 {
-    public class RayInteractable : PointerInteractable<RayInteractor, RayInteractable>
+    public class RayInteractable : Interactable<RayInteractor, RayInteractable>, IPointable
     {
         [SerializeField]
         private Collider _collider;
@@ -33,24 +26,47 @@ namespace Oculus.Interaction
         [SerializeField, Optional, Interface(typeof(IPointableSurface))]
         private MonoBehaviour _surface = null;
 
-        [SerializeField, Optional, Interface(typeof(IMovementProvider))]
-        private MonoBehaviour _movementProvider;
-        private IMovementProvider MovementProvider { get; set; }
-
         private IPointableSurface Surface;
 
-        protected override void Awake()
+        public event Action<PointerArgs> OnPointerEvent = delegate { };
+        private PointableDelegate<RayInteractor> _pointableDelegate;
+
+        protected bool _started = false;
+
+        protected virtual void Awake()
         {
-            base.Awake();
             Surface = _surface as IPointableSurface;
-            MovementProvider = _movementProvider as IMovementProvider;
         }
 
-        protected override void Start()
+        protected virtual void Start()
         {
-            this.BeginStart(ref _started, () => base.Start());
+            this.BeginStart(ref _started);
             Assert.IsNotNull(_collider);
+            _pointableDelegate = new PointableDelegate<RayInteractor>(this, ComputePointer);
             this.EndStart(ref _started);
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            if (_started)
+            {
+                _pointableDelegate.OnPointerEvent += InvokePointerEvent;
+            }
+        }
+
+        protected override void OnDisable()
+        {
+            if (_started)
+            {
+                _pointableDelegate.OnPointerEvent -= InvokePointerEvent;
+            }
+            base.OnDisable();
+        }
+
+        private void InvokePointerEvent(PointerArgs args)
+        {
+            OnPointerEvent(args);
         }
 
         public bool Raycast(Ray ray, out SurfaceHit hit, in float maxDistance, in bool useSurface)
@@ -70,16 +86,24 @@ namespace Oculus.Interaction
             return false;
         }
 
-        public IMovement GenerateMovement(in Pose to, in Pose source)
+        private void ComputePointer(RayInteractor rayInteractor, out Vector3 position, out Quaternion rotation)
         {
-            if (MovementProvider == null)
+            if (rayInteractor.CollisionInfo != null)
             {
-                return null;
+                position = rayInteractor.CollisionInfo.Value.Point;
+                rotation = Quaternion.LookRotation(rayInteractor.CollisionInfo.Value.Normal);
+                return;
             }
-            IMovement movement = MovementProvider.CreateMovement();
-            movement.StopAndSetPose(source);
-            movement.MoveTo(to);
-            return movement;
+            else
+            {
+                position = Vector3.zero;
+                rotation = rayInteractor.Rotation;
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            _pointableDelegate = null;
         }
 
         #region Inject
@@ -100,11 +124,6 @@ namespace Oculus.Interaction
             _surface = surface as MonoBehaviour;
         }
 
-        public void InjectOptionalMovementProvider(IMovementProvider provider)
-        {
-            _movementProvider = provider as MonoBehaviour;
-            MovementProvider = provider;
-        }
         #endregion
     }
 }

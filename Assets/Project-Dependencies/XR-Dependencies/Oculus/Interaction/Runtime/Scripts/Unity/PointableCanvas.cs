@@ -1,26 +1,21 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
+using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 namespace Oculus.Interaction
 {
@@ -29,65 +24,68 @@ namespace Oculus.Interaction
     /// events onto an associated Canvas via the IPointableCanvas interface
     /// Requires a PointableCanvasModule present in the scene.
     /// </summary>
-    public class PointableCanvas : PointableElement, IPointableCanvas
+    public class PointableCanvas : MonoBehaviour, IPointableCanvas
     {
+        [SerializeField, Interface(typeof(IPointable))]
+        private MonoBehaviour _pointable;
+        private IPointable Pointable;
+
         [SerializeField]
         private Canvas _canvas;
         public Canvas Canvas => _canvas;
 
+        public event Action<PointerArgs> OnPointerEvent = delegate { };
+
         private bool _registered = false;
 
-        protected override void Start()
+        protected bool _started = false;
+
+        protected virtual void Awake()
         {
-            base.Start();
-            Assert.IsNotNull(Canvas);
-            Assert.IsNotNull(Canvas.GetComponent<GraphicRaycaster>(),
-        "PointableCanvas requires that the Canvas object has an attached GraphicRaycaster.");
+            Pointable = _pointable as IPointable;
+        }
+
+        protected virtual void Start()
+        {
+            this.BeginStart(ref _started);
+            Assert.IsNotNull(Pointable);
+            this.EndStart(ref _started);
         }
 
         private void Register()
         {
             PointableCanvasModule.RegisterPointableCanvas(this);
+            Pointable.OnPointerEvent += HandlePointerEvent;
             _registered = true;
         }
 
         private void Unregister()
         {
             if (!_registered) return;
+            Pointable.OnPointerEvent -= HandlePointerEvent;
             PointableCanvasModule.UnregisterPointableCanvas(this);
             _registered = false;
         }
 
-        protected override void OnEnable()
+        private void HandlePointerEvent(PointerArgs args)
         {
-            base.OnEnable();
+            OnPointerEvent(args);
+        }
+
+        protected virtual void OnEnable()
+        {
             if (_started)
             {
                 Register();
             }
         }
 
-        protected override void OnDisable()
+        protected virtual void OnDisable()
         {
             if (_started)
             {
                 Unregister();
             }
-            base.OnDisable();
         }
-
-        #region Inject
-
-        public void InjectAllPointableCanvas(Canvas canvas)
-        {
-            InjectCanvas(canvas);
-        }
-
-        public void InjectCanvas(Canvas canvas)
-        {
-            _canvas = canvas;
-        }
-
-        #endregion
     }
 }

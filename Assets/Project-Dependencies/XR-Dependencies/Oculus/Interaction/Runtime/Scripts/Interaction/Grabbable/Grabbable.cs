@@ -1,31 +1,43 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
-    public class Grabbable : PointableElement, IGrabbable
+    public enum GrabbableEvent
     {
+        Add,
+        Update,
+        Remove
+    }
+
+    public struct GrabbableArgs
+    {
+        public int GrabIdentifier { get; }
+        public GrabbableEvent GrabbableEvent { get; }
+        public GrabbableArgs(int grabIdentifier, GrabbableEvent grabbableEvent)
+        {
+            this.GrabIdentifier = grabIdentifier;
+            this.GrabbableEvent = grabbableEvent;
+        }
+    }
+
+    public class Grabbable : MonoBehaviour, IGrabbable
+    {
+
         [SerializeField, Interface(typeof(ITransformer)), Optional]
         private MonoBehaviour _oneGrabTransformer = null;
 
@@ -33,7 +45,38 @@ namespace Oculus.Interaction
         private MonoBehaviour _twoGrabTransformer = null;
 
         [SerializeField]
+        private bool _transferHandOnSecondGrab;
+
+        [SerializeField]
+        private bool _addNewGrabsToFront = false;
+
+        [SerializeField]
         private int _maxGrabPoints = -1;
+
+        #region Properties
+        public bool TransferHandOnSecondGrab
+        {
+            get
+            {
+                return _transferHandOnSecondGrab;
+            }
+            set
+            {
+                _transferHandOnSecondGrab = value;
+            }
+        }
+
+        public bool AddNewGrabsToFront
+        {
+            get
+            {
+                return _addNewGrabsToFront;
+            }
+            set
+            {
+                _addNewGrabsToFront = value;
+            }
+        }
 
         public int MaxGrabPoints
         {
@@ -46,24 +89,35 @@ namespace Oculus.Interaction
                 _maxGrabPoints = value;
             }
         }
+        #endregion
 
+        public event Action<GrabbableArgs> WhenGrabbableUpdated = delegate { };
+
+        public List<Pose> GrabPoints => _grabPoints;
+        public int GrabPointsCount => _grabPoints.Count;
         public Transform Transform => transform;
-        public List<Pose> GrabPoints => _selectingPoints;
+
+        protected List<Pose> _grabPoints;
+        protected List<int> _grabPointIds;
 
         private ITransformer _activeTransformer = null;
         private ITransformer OneGrabTransformer;
         private ITransformer TwoGrabTransformer;
 
-        protected override void Awake()
+        protected bool _started = false;
+
+        protected virtual void Awake()
         {
-            base.Awake();
             OneGrabTransformer = _oneGrabTransformer as ITransformer;
             TwoGrabTransformer = _twoGrabTransformer as ITransformer;
         }
 
-        protected override void Start()
+        protected virtual void Start()
         {
-            this.BeginStart(ref _started, () => base.Start());
+            this.BeginStart(ref _started);
+
+            _grabPoints = new List<Pose>();
+            _grabPointIds = new List<int>();
 
             if (OneGrabTransformer != null)
             {
@@ -90,35 +144,78 @@ namespace Oculus.Interaction
             this.EndStart(ref _started);
         }
 
-        public override void ProcessPointerEvent(PointerEvent evt)
+        public void AddGrabPoint(int id, Pose pose)
         {
-            switch (evt.Type)
+            // If the transfer hand on second grab flag is on, we ignore any subsequent events
+            if (_grabPoints.Count == 1 && _transferHandOnSecondGrab)
             {
-                case PointerEventType.Select:
-                    EndTransform();
-                    break;
-                case PointerEventType.Unselect:
-                    EndTransform();
-                    break;
-                case PointerEventType.Cancel:
-                    EndTransform();
-                    break;
+                RemoveGrabPoint(_grabPointIds[0], _grabPoints[0]);
             }
 
-            base.ProcessPointerEvent(evt);
+            Pose grabPoint = pose;
 
-            switch (evt.Type)
+            if (_addNewGrabsToFront)
             {
-                case PointerEventType.Select:
-                    BeginTransform();
-                    break;
-                case PointerEventType.Unselect:
-                    BeginTransform();
-                    break;
-                case PointerEventType.Move:
-                    UpdateTransform();
-                    break;
+                _grabPointIds.Insert(0, id);
+                _grabPoints.Insert(0, grabPoint);
             }
+            else
+            {
+                _grabPointIds.Add(id);
+                _grabPoints.Add(grabPoint);
+            }
+
+            WhenGrabbableUpdated(new GrabbableArgs(id, GrabbableEvent.Add));
+
+            BeginTransform();
+        }
+
+        public void UpdateGrabPoint(int id, Pose pose)
+        {
+            int index = _grabPointIds.IndexOf(id);
+            if (index == -1)
+            {
+                return;
+            }
+
+            _grabPoints[index] = pose;
+            UpdateTransform();
+
+            WhenGrabbableUpdated(new GrabbableArgs(id, GrabbableEvent.Update));
+        }
+
+        public void RemoveGrabPoint(int id, Pose pose)
+        {
+            int index = _grabPointIds.IndexOf(id);
+            if (index == -1)
+            {
+                return;
+            }
+
+            _grabPoints[index] = pose;
+            EndTransform();
+
+            _grabPointIds.RemoveAt(index);
+            _grabPoints.RemoveAt(index);
+
+            WhenGrabbableUpdated(new GrabbableArgs(id, GrabbableEvent.Remove));
+
+            BeginTransform();
+        }
+
+        public void ResetGrabPoint(int id, Pose grabSourcePose)
+        {
+            int index = _grabPointIds.IndexOf(id);
+            if (index == -1)
+            {
+                return;
+            }
+
+            EndTransform();
+
+            _grabPoints[index] = grabSourcePose;
+
+            BeginTransform();
         }
 
         // Whenever we change the number of grab points, we save the
@@ -129,7 +226,7 @@ namespace Oculus.Interaction
             // begin the new one
             EndTransform();
 
-            int useGrabPoints = _selectingPoints.Count;
+            int useGrabPoints = _grabPoints.Count;
             if (_maxGrabPoints != -1)
             {
                 useGrabPoints = Mathf.Min(useGrabPoints, _maxGrabPoints);

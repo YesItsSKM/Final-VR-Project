@@ -1,22 +1,14 @@
-﻿/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
+﻿/**************************************************************************************************
+ * Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
  *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
+ * Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
  * https://developer.oculus.com/licenses/oculussdk/
  *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+ * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ * ANY KIND, either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ **************************************************************************************************/
 
 using Facebook.WitAi.Configuration;
 using Oculus.Voice.Core.Bindings.Android;
@@ -33,16 +25,16 @@ namespace Oculus.Voice.Bindings.Android
         public bool Active => binding.Call<bool>("isActive");
         public bool IsRequestActive => binding.Call<bool>("isRequestActive");
         public bool MicActive => binding.Call<bool>("isMicActive");
-        public bool PlatformSupportsWit => binding.Call<bool>("isSupported");
+        public bool PlatformSupportsWit => binding.Call<bool>("platformSupportsWit");
 
         public void Activate(string text)
         {
-            binding.Call("activate", text, "");
+            binding.Call("activate", text);
         }
 
         public void Activate(string text, WitRequestOptions options)
         {
-            binding.Call("activate", text, JsonUtility.ToJson(options));
+            binding.Call("activate", text);
         }
 
         public void Activate()
@@ -52,7 +44,7 @@ namespace Oculus.Voice.Bindings.Android
 
         public void Activate(WitRequestOptions options)
         {
-            binding.Call("activate", JsonUtility.ToJson(options));
+            binding.Call("activate");
         }
 
         public void ActivateImmediately()
@@ -62,17 +54,12 @@ namespace Oculus.Voice.Bindings.Android
 
         public void ActivateImmediately(WitRequestOptions options)
         {
-            binding.Call("activateImmediately", JsonUtility.ToJson(options));
+            binding.Call("activateImmediately");
         }
 
         public void Deactivate()
         {
             binding.Call("deactivate");
-        }
-
-        public void DeactivateAndAbortRequest()
-        {
-            binding.Call("deactivateAndAbortRequest");
         }
 
         public void SetRuntimeConfiguration(WitRuntimeConfiguration configuration)
@@ -83,11 +70,6 @@ namespace Oculus.Voice.Bindings.Android
         public void SetListener(VoiceSDKListenerBinding listener)
         {
             binding.Call("setListener", listener);
-        }
-
-        public void Connect()
-        {
-            binding.Call<bool>("connect");
         }
     }
 }
