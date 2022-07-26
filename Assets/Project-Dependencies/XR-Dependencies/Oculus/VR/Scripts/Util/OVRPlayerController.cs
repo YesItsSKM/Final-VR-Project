@@ -155,6 +155,15 @@ public class OVRPlayerController : MonoBehaviour
 	private Vector3 MoveThrottle = Vector3.zero;
 	private float FallSpeed = 0.0f;
 	private OVRPose? InitialPose;
+
+
+	// SKM
+
+	//public PlayerMovement playerMovement;
+
+	// SKM
+
+
 	public float InitialYRotation { get; private set; }
 	private float MoveScaleMultiplier = 1.0f;
 	private float RotationScaleMultiplier = 1.0f;
