@@ -9,11 +9,6 @@ public class PlayerMovement : MonoBehaviour
 
     public TextMeshProUGUI debugText;
 
-    private bool HandPoseMoveForward = false;
-    private bool HandPoseMoveBackward = false;
-    private bool HandPoseRotateRight = false;
-    private bool HandPoseRotateLeft = false;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -28,32 +23,36 @@ public class PlayerMovement : MonoBehaviour
 
     public void ThumbsUpSelected()
     {
-        debugText.text = "Thumbs Up";
+        //debugText.text = "Thumbs Up";
 
-        playerController.EnableLinearMovement = true;
+            debugText.text = "Can move";
+            SetHandPoseMoveForward(true);
 
-        
+        //playerController.EnableLinearMovement = true;
     }
 
     public void ThumbsUpUnselected()
     {
-        debugText.text = ".";
+
+            debugText.text = "Can't move";
+        SetHandPoseMoveForward(false);
+       
     }
 
     public void SetHandPoseMoveForward(bool state)
     {
-        HandPoseMoveForward = state;
+        playerController.HandPoseMoveForward = state;
     }
     public void SetHandPoseMoveBackward(bool state)
     {
-        HandPoseMoveBackward = state;
+        playerController.HandPoseMoveBackward = state;
     }
     public void SetHandPoseRotateRight(bool state)
     {
-        HandPoseRotateRight = state;
+        playerController.HandPoseRotateRight = state;
     }
     public void SetHandPoseRotateLeft(bool state)
     {
-        HandPoseRotateLeft = state;
+        playerController.HandPoseRotateLeft = state;
     }
 }

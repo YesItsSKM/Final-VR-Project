@@ -1,4 +1,14 @@
 /*
+ * ----------------------------------------------------------------------------------------------------------------------------------
+ * 
+ * THIS FILE IS BEEN UPDATED.
+ * Shubham Kumar Maurya, 2022 - I've added functions and variables that uses hand pose detection to update the player controller.
+ * 
+ * The sections containing my code will be between comment section named 'SKM'
+ * 
+ * ----------------------------------------------------------------------------------------------------------------------------------
+ * 
+ * 
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -27,6 +37,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class OVRPlayerController : MonoBehaviour
 {
+
 	/// <summary>
 	/// The rate acceleration during movement.
 	/// </summary>
@@ -157,14 +168,17 @@ public class OVRPlayerController : MonoBehaviour
 	private OVRPose? InitialPose;
 
 
-	// SKM
+    // SKM
+	[Header("\nHAND POSE DETECTION\n")]
+		public bool HandPoseMoveForward = false;
+		public bool HandPoseMoveBackward = false;
+		public bool HandPoseRotateRight = false;
+		public bool HandPoseRotateLeft = false;
 
-	//public PlayerMovement playerMovement;
-
-	// SKM
+    // SKM
 
 
-	public float InitialYRotation { get; private set; }
+    public float InitialYRotation { get; private set; }
 	private float MoveScaleMultiplier = 1.0f;
 	private float RotationScaleMultiplier = 1.0f;
 	private bool SkipMouseRotation = true; // It is rare to want to use mouse movement in VR, so ignore the mouse by default.
@@ -358,7 +372,7 @@ public class OVRPlayerController : MonoBehaviour
 
 			bool dpad_move = false;
 
-			if (OVRInput.Get(OVRInput.Button.DpadUp))
+			if (OVRInput.Get(OVRInput.Button.DpadUp) || HandPoseMoveForward)
 			{
 				moveForward = true;
 				dpad_move = true;
