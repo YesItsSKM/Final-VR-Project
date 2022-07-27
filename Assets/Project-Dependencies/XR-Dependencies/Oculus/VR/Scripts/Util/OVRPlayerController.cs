@@ -176,6 +176,8 @@ public class OVRPlayerController : MonoBehaviour
 	[HideInInspector] public bool HandPoseRotateRight = false;
 	[HideInInspector] public bool HandPoseRotateLeft = false;
 
+	public float FactorHeadRotation = 2f;
+
     // SKM
 
 
@@ -355,8 +357,6 @@ public class OVRPlayerController : MonoBehaviour
 
 
 
-
-
 	public virtual void UpdateMovement()
 	{
 		//todo: enable for Unity Input System
@@ -532,6 +532,7 @@ public class OVRPlayerController : MonoBehaviour
 	}
 
 
+
 	/// <summary>
 	/// Invoked by OVRCameraRig's UpdatedAnchors callback. Allows the Hmd rotation to update the facing direction of the player.
 	/// </summary>
@@ -545,7 +546,7 @@ public class OVRPlayerController : MonoBehaviour
 			Vector3 prevPos = root.position;
 			Quaternion prevRot = root.rotation;
 
-			transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y, 0.0f);
+			transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y * FactorHeadRotation, 0.0f);
 
 			root.position = prevPos;
 			root.rotation = prevRot;
