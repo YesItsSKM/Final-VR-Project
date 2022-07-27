@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -12,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        debugText.text = "Testing begins!";
+        debugText.text = "o";
     }
 
     // Update is called once per frame
@@ -21,24 +19,58 @@ public class PlayerMovement : MonoBehaviour
         
     }
 
-    public void ThumbsUpSelected()
+
+    /*
+        LOCOMOTION
+     */
+
+    // Move Forward
+    public void MoveForwardSelected()
     {
-        //debugText.text = "Thumbs Up";
-
-            debugText.text = "Can move";
-            SetHandPoseMoveForward(true);
-
-        //playerController.EnableLinearMovement = true;
+        SetHandPoseMoveForward(true);
     }
 
-    public void ThumbsUpUnselected()
+    public void MoveForwardUnselected()
     {
-
-            debugText.text = "Can't move";
         SetHandPoseMoveForward(false);
-       
     }
 
+    // Move Backward
+    public void MoveBackwardSelected()
+    {
+        SetHandPoseMoveBackward(true);
+    }
+
+    public void MoveBackwardUnselected()
+    {
+        SetHandPoseMoveBackward(false);
+    }
+
+
+    // Rotate Right
+    public void RotateRightSelected()
+    {
+        SetHandPoseRotateRight(true);
+    }
+
+    public void RotateRightUnselected()
+    {
+        SetHandPoseRotateRight(false);
+    }
+
+    // Rotate Left
+    public void RotateLeftSelected()
+    {
+        SetHandPoseRotateLeft(true);
+    }
+
+    public void RotateLeftUnselected()
+    {
+        SetHandPoseRotateLeft(false);
+    }
+
+
+    // STATE MANAGERS
     public void SetHandPoseMoveForward(bool state)
     {
         playerController.HandPoseMoveForward = state;

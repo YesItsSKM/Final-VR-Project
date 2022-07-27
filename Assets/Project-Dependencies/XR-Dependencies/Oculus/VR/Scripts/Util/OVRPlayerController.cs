@@ -42,6 +42,8 @@ public class OVRPlayerController : MonoBehaviour
 	/// The rate acceleration during movement.
 	/// </summary>
 	public float Acceleration = 0.1f;
+	
+	public float BackwardsAcceleration = 2f; // SKM - Added additional variable for backwards acceleration
 
 	/// <summary>
 	/// The rate of damping on movement.
@@ -169,11 +171,10 @@ public class OVRPlayerController : MonoBehaviour
 
 
     // SKM
-	[Header("\nHAND POSE DETECTION\n")]
-		public bool HandPoseMoveForward = false;
-		public bool HandPoseMoveBackward = false;
-		public bool HandPoseRotateRight = false;
-		public bool HandPoseRotateLeft = false;
+	[HideInInspector] public bool HandPoseMoveForward = false;
+	[HideInInspector] public bool HandPoseMoveBackward = false;
+	[HideInInspector] public bool HandPoseRotateRight = false;
+	[HideInInspector] public bool HandPoseRotateLeft = false;
 
     // SKM
 
@@ -376,10 +377,9 @@ public class OVRPlayerController : MonoBehaviour
 			{
 				moveForward = true;
 				dpad_move = true;
-
 			}
 
-			if (OVRInput.Get(OVRInput.Button.DpadDown))
+			if (OVRInput.Get(OVRInput.Button.DpadDown) || HandPoseMoveBackward)
 			{
 				moveBack = true;
 				dpad_move = true;
@@ -412,7 +412,7 @@ public class OVRPlayerController : MonoBehaviour
 			if (moveForward)
 				MoveThrottle += ort * (transform.lossyScale.z * moveInfluence * Vector3.forward);
 			if (moveBack)
-				MoveThrottle += ort * (transform.lossyScale.z * moveInfluence * BackAndSideDampen * Vector3.back);
+				MoveThrottle += ort * (transform.lossyScale.z * moveInfluence * BackwardsAcceleration * BackAndSideDampen * Vector3.back); // SKM - Updated the function by multiplying with 'BackwardsAcceleration'
 			if (moveLeft)
 				MoveThrottle += ort * (transform.lossyScale.x * moveInfluence * BackAndSideDampen * Vector3.left);
 			if (moveRight)
@@ -482,7 +482,7 @@ public class OVRPlayerController : MonoBehaviour
 			if (SnapRotation)
 			{
 				if (OVRInput.Get(OVRInput.Button.SecondaryThumbstickLeft) ||
-					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickLeft)))
+					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickLeft)) || HandPoseRotateLeft)
 				{
 					if (ReadyToSnapTurn)
 					{
@@ -491,7 +491,7 @@ public class OVRPlayerController : MonoBehaviour
 					}
 				}
 				else if (OVRInput.Get(OVRInput.Button.SecondaryThumbstickRight) ||
-					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickRight)))
+					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickRight)) || HandPoseRotateRight)
 				{
 					if (ReadyToSnapTurn)
 					{
@@ -510,10 +510,11 @@ public class OVRPlayerController : MonoBehaviour
 				if (RotationEitherThumbstick)
 				{
 					Vector2 altSecondaryAxis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick);
-					if (secondaryAxis.sqrMagnitude < altSecondaryAxis.sqrMagnitude)
+					if ((secondaryAxis.sqrMagnitude < altSecondaryAxis.sqrMagnitude) || HandPoseRotateLeft || HandPoseRotateRight)
 					{
-						secondaryAxis = altSecondaryAxis;
-					}
+                        Vector2 handPoseRotation = HandPoseRotateLeft ? Vector2.left : Vector2.right;
+                        secondaryAxis = (HandPoseRotateLeft || HandPoseRotateRight) ? handPoseRotation : altSecondaryAxis;
+                    }
 				}
 				euler.y += secondaryAxis.x * rotateInfluence;
 			}
