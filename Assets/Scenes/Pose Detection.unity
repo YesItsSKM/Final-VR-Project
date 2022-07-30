@@ -201,8 +201,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0950df82e7936c84983497630bde5b54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Acceleration: 0.01
-  BackwardsAcceleration: 1
+  Acceleration: 0.1
+  BackwardsAcceleration: 2
   Damping: 0.3
   BackAndSideDampen: 0.5
   JumpForce: 0.3
@@ -213,7 +213,7 @@ MonoBehaviour:
   FixedSpeedSteps: 0
   HmdResetsY: 0
   HmdRotatesY: 1
-  GravityModifier: 0.1
+  GravityModifier: 0.379
   useProfileData: 1
   EnableLinearMovement: 1
   EnableRotation: 1
@@ -222,7 +222,7 @@ MonoBehaviour:
   HandPoseMoveBackward: 0
   HandPoseRotateRight: 0
   HandPoseRotateLeft: 0
-  FactorHeadRotation: 3
+  FactorHeadRotation: 2
 --- !u!143 &149280122
 CharacterController:
   m_ObjectHideFlags: 0
