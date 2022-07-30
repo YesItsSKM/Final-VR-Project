@@ -51,30 +51,22 @@ public class PlayerMovement : MonoBehaviour
     public void RotateRightSelected()
     {
         SetHandPoseRotateRight(true);
-
-        debugText.text = "Rotate right";
     }
 
     public void RotateRightUnselected()
     {
         SetHandPoseRotateRight(false);
-
-        debugText.text = "o";
     }
 
     // Rotate Left
     public void RotateLeftSelected()
     {
         SetHandPoseRotateLeft(true);
-
-        debugText.text = "Rotate left";
     }
 
     public void RotateLeftUnselected()
     {
         SetHandPoseRotateLeft(false);
-
-        debugText.text = "o";
     }
 
 

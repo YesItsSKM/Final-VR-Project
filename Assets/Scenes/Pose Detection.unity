@@ -206,7 +206,7 @@ MonoBehaviour:
   Damping: 0.3
   BackAndSideDampen: 0.5
   JumpForce: 0.3
-  RotationAmount: 0.5
+  RotationAmount: 1.5
   RotationRatchet: 45
   SnapRotation: 0
   RotateAroundGuardianCenter: 1
@@ -217,12 +217,15 @@ MonoBehaviour:
   useProfileData: 1
   EnableLinearMovement: 1
   EnableRotation: 1
-  RotationEitherThumbstick: 1
+  RotationEitherThumbstick: 0
   HandPoseMoveForward: 0
   HandPoseMoveBackward: 0
   HandPoseRotateRight: 0
   HandPoseRotateLeft: 0
+<<<<<<< HEAD
   FactorHeadRotation: 2
+=======
+>>>>>>> parent of 542ab37 (Basic locomotion complete)
 --- !u!143 &149280122
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1308,7 +1311,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 149280123}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
-        m_MethodName: RotateLeftSelected
+        m_MethodName: RotateRightSelected
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1323,7 +1326,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 149280123}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
-        m_MethodName: RotateLeftUnselected
+        m_MethodName: RotateRightUnselected
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2035,7 +2038,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 149280123}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
-        m_MethodName: RotateRightSelected
+        m_MethodName: RotateLeftSelected
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2050,7 +2053,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 149280123}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
-        m_MethodName: RotateRightUnselected
+        m_MethodName: RotateLeftUnselected
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
