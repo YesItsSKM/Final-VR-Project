@@ -20,6 +20,7 @@ public class HarnessGravity : MonoBehaviour
     {
         obj = null;
 
+
         debugText.text = "x";
     }
 
