@@ -1,18 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
+using TMPro;
 
 public class HarnessGravity : MonoBehaviour
 {
-    public XRRayInteractor leftHandRay, rightHandRay;
+    public TextMeshProUGUI debugText;
 
-    [SerializeField] Transform obj;
+    Transform obj;
     Rigidbody objRigidBody;
 
     public float influenceRange;
     public float intensity;
-    public float distanceToPlayer;
+    
+    private float distanceToPlayer;
     
     Vector3 pullForce;
 
@@ -20,33 +19,21 @@ public class HarnessGravity : MonoBehaviour
     void Start()
     {
         obj = null;
+
+        debugText.text = "x";
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (leftHandRay.TryGetCurrent3DRaycastHit(out RaycastHit hit) && (hit.transform.tag == "Interactable"))
+        Debug.DrawRay(transform.position, transform.right * influenceRange, Color.green);
+
+        if (Physics.Raycast(transform.position, transform.right, out RaycastHit hit, influenceRange) && hit.transform.tag == "Interactable")
         {
             obj = hit.transform;
             objRigidBody = hit.rigidbody;
 
-            if (!objRigidBody.useGravity)
-                objRigidBody.useGravity = true;
-
-            distanceToPlayer = Vector3.Distance(obj.position, transform.position);
-
-            if (distanceToPlayer <= influenceRange)
-            {
-                pullForce = (transform.position - obj.position).normalized / distanceToPlayer * intensity;
-                objRigidBody.AddForce(pullForce, ForceMode.Force);
-            }
-            
-        }
-
-        if (rightHandRay.TryGetCurrent3DRaycastHit(out RaycastHit rHit) && (rHit.transform.tag == "Interactable"))
-        {
-            obj = rHit.transform;
-            objRigidBody = rHit.rigidbody;
+            debugText.text = obj.transform.name;
 
             if (!objRigidBody.useGravity)
                 objRigidBody.useGravity = true;
@@ -58,7 +45,9 @@ public class HarnessGravity : MonoBehaviour
                 pullForce = (transform.position - obj.position).normalized / distanceToPlayer * intensity;
                 objRigidBody.AddForce(pullForce, ForceMode.Force);
             }
-
         }
+        
+        else
+            debugText.text = "x";
     }
 }
