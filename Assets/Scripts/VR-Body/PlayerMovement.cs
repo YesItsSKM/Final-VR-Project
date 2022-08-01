@@ -28,22 +28,34 @@ public class PlayerMovement : MonoBehaviour
     public void MoveForwardSelected()
     {
         SetHandPoseMoveForward(true);
+
+        playerController.HmdRotatesY = true;
     }
 
     public void MoveForwardUnselected()
     {
         SetHandPoseMoveForward(false);
+
+        playerController.HmdRotatesY = false;
+
+        ResetRotationAfterMovement();
     }
 
     // Move Backward
     public void MoveBackwardSelected()
     {
         SetHandPoseMoveBackward(true);
+
+        playerController.HmdRotatesY = true;
     }
 
     public void MoveBackwardUnselected()
     {
         SetHandPoseMoveBackward(false);
+
+        playerController.HmdRotatesY = false;
+
+        ResetRotationAfterMovement();
     }
 
 
@@ -86,5 +98,19 @@ public class PlayerMovement : MonoBehaviour
     public void SetHandPoseRotateLeft(bool state)
     {
         playerController.HandPoseRotateLeft = state;
+    }
+
+    private void ResetRotationAfterMovement()
+    {
+        Transform root = playerController.CameraRig.trackingSpace;
+        Transform centerEye = playerController.CameraRig.centerEyeAnchor;
+
+        Vector3 prevPos = root.position;
+        Quaternion prevRot = root.rotation;
+
+        transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y, 0.0f);
+
+        root.position = prevPos;
+        root.rotation = prevRot;
     }
 }

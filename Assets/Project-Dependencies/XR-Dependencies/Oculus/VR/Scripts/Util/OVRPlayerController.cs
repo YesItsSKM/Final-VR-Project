@@ -162,7 +162,7 @@ public class OVRPlayerController : MonoBehaviour
 	public bool RotationEitherThumbstick = false;
 
 	protected CharacterController Controller = null;
-	protected OVRCameraRig CameraRig = null;
+	[HideInInspector] public OVRCameraRig CameraRig = null;			// SKM - Made this public
 
 	private float MoveScale = 1.0f;
 	private Vector3 MoveThrottle = Vector3.zero;

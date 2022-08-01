@@ -697,6 +697,7 @@ MonoBehaviour:
   EnableLinearMovement: 1
   EnableRotation: 1
   RotationEitherThumbstick: 1
+  CameraRig: {fileID: 0}
   HandPoseMoveForward: 0
   HandPoseMoveBackward: 0
   HandPoseRotateRight: 0
