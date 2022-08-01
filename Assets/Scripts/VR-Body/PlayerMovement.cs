@@ -5,12 +5,12 @@ public class PlayerMovement : MonoBehaviour
 {
     public OVRPlayerController playerController;
 
-    public TextMeshProUGUI debugText;
+    //public TextMeshProUGUI debugText;
 
     // Start is called before the first frame update
     void Start()
     {
-        debugText.text = "o";
+        //debugText.text = "o";
     }
 
     // Update is called once per frame
