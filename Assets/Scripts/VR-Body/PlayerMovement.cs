@@ -4,13 +4,19 @@ using TMPro;
 public class PlayerMovement : MonoBehaviour
 {
     public OVRPlayerController playerController;
+    private bool gestureAlreadyDeployed_moveForward, gestureAlreadyDeployed_moveBackward, gestureAlreadyDeployed_rotateRight, gestureAlreadyDeployed_rotateLeft;
 
     //public TextMeshProUGUI debugText;
 
+    
+    
     // Start is called before the first frame update
     void Start()
     {
-        //debugText.text = "o";
+        gestureAlreadyDeployed_moveForward = 
+        gestureAlreadyDeployed_moveBackward = 
+        gestureAlreadyDeployed_rotateRight = 
+        gestureAlreadyDeployed_rotateLeft = false;
     }
 
     // Update is called once per frame
@@ -27,13 +33,20 @@ public class PlayerMovement : MonoBehaviour
     // Move Forward
     public void MoveForwardSelected()
     {
-        SetHandPoseMoveForward(true);
+        if (!gestureAlreadyDeployed_moveForward)
+        {
+            gestureAlreadyDeployed_moveForward = true;
 
-        playerController.HmdRotatesY = true;
+            SetHandPoseMoveForward(true);
+
+            playerController.HmdRotatesY = true;
+        }
     }
 
     public void MoveForwardUnselected()
     {
+        gestureAlreadyDeployed_moveForward = false;
+
         SetHandPoseMoveForward(false);
 
         playerController.HmdRotatesY = false;
@@ -44,13 +57,20 @@ public class PlayerMovement : MonoBehaviour
     // Move Backward
     public void MoveBackwardSelected()
     {
-        SetHandPoseMoveBackward(true);
+        if (!gestureAlreadyDeployed_moveBackward)
+        {
+            gestureAlreadyDeployed_moveBackward = true;
 
-        playerController.HmdRotatesY = true;
+            SetHandPoseMoveBackward(true);
+
+            playerController.HmdRotatesY = true;
+        }
     }
 
     public void MoveBackwardUnselected()
     {
+        gestureAlreadyDeployed_moveBackward = false;
+
         SetHandPoseMoveBackward(false);
 
         playerController.HmdRotatesY = false;
@@ -62,23 +82,37 @@ public class PlayerMovement : MonoBehaviour
     // Rotate Right
     public void RotateRightSelected()
     {
-        SetHandPoseRotateRight(true);
+        if (!gestureAlreadyDeployed_rotateRight)
+        {
+            gestureAlreadyDeployed_rotateRight = true;
+
+            SetHandPoseRotateRight(true);
+        }
     }
 
     public void RotateRightUnselected()
     {
         SetHandPoseRotateRight(false);
+
+        gestureAlreadyDeployed_rotateRight = false;
     }
 
     // Rotate Left
     public void RotateLeftSelected()
     {
-        SetHandPoseRotateLeft(true);
+        if (!gestureAlreadyDeployed_rotateLeft)
+        {
+            gestureAlreadyDeployed_rotateLeft = true;
+
+            SetHandPoseRotateLeft(true);
+        }
     }
 
     public void RotateLeftUnselected()
     {
         SetHandPoseRotateLeft(false);
+
+        gestureAlreadyDeployed_rotateLeft = false;
     }
 
 
