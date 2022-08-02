@@ -6558,6 +6558,7 @@ GameObject:
   m_Component:
   - component: {fileID: 974539323}
   - component: {fileID: 974539324}
+  - component: {fileID: 974539326}
   m_Layer: 0
   m_Name: RayCast
   m_TagString: Untagged
@@ -6572,13 +6573,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 974539322}
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
   m_LocalPosition: {x: 0.1, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8398769329915970883}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
 --- !u!114 &974539324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6594,6 +6595,65 @@ MonoBehaviour:
   debugText: {fileID: 1051398365}
   influenceRange: 5
   intensity: 75
+--- !u!114 &974539326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974539322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d35bcf958d3997c4a9e63132440b77c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trackedThumbJoints:
+  - {fileID: 8398769328040135740}
+  - {fileID: 8398769328624031211}
+  - {fileID: 8398769328701171277}
+  trackedIndexJoints:
+  - {fileID: 8398769328593564681}
+  - {fileID: 8398769328974584179}
+  - {fileID: 8398769329158361752}
+  trackedMiddleJoints:
+  - {fileID: 8398769328013687853}
+  - {fileID: 8398769329704741026}
+  - {fileID: 8398769329114443711}
+  trackedRingJoints:
+  - {fileID: 8398769329770159181}
+  - {fileID: 8398769329122557982}
+  - {fileID: 8398769329436196219}
+  trackedPinkyJoints:
+  - {fileID: 8398769329799832367}
+  - {fileID: 8398769327965317687}
+  - {fileID: 8398769329395500481}
+  thumbJoints:
+  - {fileID: 8447082966658910441}
+  - {fileID: 8352548718623220874}
+  - {fileID: 2003599736600702221}
+  indexJoints:
+  - {fileID: 8153021305432234673}
+  - {fileID: 3742394135969244188}
+  - {fileID: 5097370190094604117}
+  middleJoints:
+  - {fileID: 3667946887031033852}
+  - {fileID: 6341119541814870811}
+  - {fileID: 3199222090671269133}
+  ringJoints:
+  - {fileID: 9118793900680821531}
+  - {fileID: 6323950001949818003}
+  - {fileID: 1092408308203067202}
+  pinkyJoints:
+  - {fileID: 1189529853618132095}
+  - {fileID: 5372056943616844619}
+  - {fileID: 2455146755880792703}
+  thumbRotationOffset: {x: 0, y: 0, z: -90}
+  indexRotationOffset: {x: 0, y: 0, z: -90}
+  middleRotationOffset: {x: 0, y: 0, z: -90}
+  ringRotationOffset: {x: 0, y: 0, z: -90}
+  pinkyRotationOffset: {x: 0, y: 0, z: -90}
+  targetRot: {fileID: 1215611548}
+  objRot: {fileID: 1406389279}
 --- !u!1 &988933260
 GameObject:
   m_ObjectHideFlags: 0
@@ -42770,7 +42830,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7123066570139461244
 Transform:
   m_ObjectHideFlags: 0
@@ -47357,7 +47417,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8398769328914678481
 Transform:
   m_ObjectHideFlags: 0
