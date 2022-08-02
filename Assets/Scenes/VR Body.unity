@@ -1965,11 +1965,47 @@ MonoBehaviour:
   - {fileID: 7123066570696798200}
   - {fileID: 7123066570255134624}
   - {fileID: 7123066569446047326}
+  trackedIndexJoints:
+  - {fileID: 7123066569171019175}
+  - {fileID: 7123066570790811166}
+  - {fileID: 7123066570600932753}
+  trackedMiddleJoints:
+  - {fileID: 7123066569771440263}
+  - {fileID: 7123066570623860903}
+  - {fileID: 7123066569347450646}
+  trackedRingJoints:
+  - {fileID: 7123066568787074034}
+  - {fileID: 7123066568991985065}
+  - {fileID: 7123066569198694626}
+  trackedPinkyJoints:
+  - {fileID: 7123066569266520281}
+  - {fileID: 7123066569545990918}
+  - {fileID: 7123066569070038788}
   thumbJoints:
   - {fileID: 5048025440923816001}
   - {fileID: 2365583844275682765}
   - {fileID: 1031632034761638305}
-  rotationOffset: {x: 180, y: 0, z: 90}
+  indexJoints:
+  - {fileID: 1330755670189234171}
+  - {fileID: 7666680084211658847}
+  - {fileID: 7358631407771796012}
+  middleJoints:
+  - {fileID: 8255111156623223807}
+  - {fileID: 6833846119797048893}
+  - {fileID: 3183749885125376522}
+  ringJoints:
+  - {fileID: 6629111072896339016}
+  - {fileID: 1564860333149110820}
+  - {fileID: 3558328720869214892}
+  pinkyJoints:
+  - {fileID: 4747904709695084946}
+  - {fileID: 6655383506521629600}
+  - {fileID: 1155344850722566491}
+  thumbRotationOffset: {x: 180, y: 0, z: 90}
+  indexRotationOffset: {x: 0, y: 0, z: 90}
+  middleRotationOffset: {x: 0, y: 0, z: 90}
+  ringRotationOffset: {x: 0, y: 0, z: 90}
+  pinkyRotationOffset: {x: 0, y: 0, z: 90}
   targetRot: {fileID: 1215611548}
   objRot: {fileID: 1406389279}
 --- !u!1 &392982904
