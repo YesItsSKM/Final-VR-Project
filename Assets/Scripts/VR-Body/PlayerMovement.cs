@@ -95,6 +95,8 @@ public class PlayerMovement : MonoBehaviour
         SetHandPoseRotateRight(false);
 
         gestureAlreadyDeployed_rotateRight = false;
+
+        ResetRotationAfterMovement();
     }
 
     // Rotate Left
@@ -113,6 +115,8 @@ public class PlayerMovement : MonoBehaviour
         SetHandPoseRotateLeft(false);
 
         gestureAlreadyDeployed_rotateLeft = false;
+
+        ResetRotationAfterMovement();
     }
 
 

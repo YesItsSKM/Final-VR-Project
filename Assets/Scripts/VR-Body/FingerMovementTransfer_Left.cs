@@ -31,7 +31,7 @@ public class FingerMovementTransfer_Left : MonoBehaviour
             thumbJoints[i].transform.eulerAngles = newRotation;
         }
 
-        for (j = 0; j < 2; j++)
+        for (j = 0; j < 3; j++)
         {
             Vector3 newRotation = new Vector3(trackedIndexJoints[j].eulerAngles.x, trackedIndexJoints[j].eulerAngles.y, trackedIndexJoints[j].eulerAngles.z);
             newRotation += indexRotationOffset;
