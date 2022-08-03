@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -14,8 +12,6 @@ public class VRMap
     {
         rigTarget.position = vrTarget.TransformPoint(trackingPositionOffset);
         rigTarget.rotation = vrTarget.rotation * Quaternion.Euler(trackingRotationOffset);
-
-        
     }
 
     public void MapHead()
@@ -35,15 +31,11 @@ public class VRRig : MonoBehaviour
 
     public float turnSmoothness;
 
-    // Start is called before the first frame update
     void Start()
     {
         headBodyOffset = vrBody.transform.position - headConstraint.position;
-
-        //head.rigTargetNextBone = null;
     }
 
-    // Update is called once per frame
     void Update()
     {
         leftArm.MapHand();
