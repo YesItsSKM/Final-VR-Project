@@ -11,7 +11,7 @@ public class FingerMovementTransfer_Left : MonoBehaviour
 
     public Vector3 thumbRotationOffset, indexRotationOffset, middleRotationOffset, ringRotationOffset, pinkyRotationOffset;
 
-    public TextMeshProUGUI targetRot, objRot;
+    //public TextMeshProUGUI targetRot, objRot;
 
     private int i, j, k, l, m;
 
