@@ -247,13 +247,13 @@ CharacterController:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Height: 2
-  m_Radius: 0.75
+  m_Height: 1.88
+  m_Radius: 0.12
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1, z: 0}
+  m_Center: {x: 0, y: 1.02, z: 0}
 --- !u!1 &210147461
 GameObject:
   m_ObjectHideFlags: 0
@@ -387,7 +387,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d5503b95dce9a74095c0a0cbd09cf76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugText: {fileID: 1051398365}
   influenceRange: 5
   intensity: 75
 --- !u!114 &340776248
@@ -903,7 +902,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d5503b95dce9a74095c0a0cbd09cf76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugText: {fileID: 1051398365}
   influenceRange: 5
   intensity: 75
 --- !u!114 &974539326
@@ -9913,7 +9911,7 @@ MonoBehaviour:
   virtualGreenScreenDepthTolerance: 0.2
   mrcActivationMode: 0
   isInsightPassthroughEnabled: 0
-  _trackingOriginType: 2
+  _trackingOriginType: 1
   usePositionTracking: 1
   useRotationTracking: 1
   useIPDInPositionTracking: 1

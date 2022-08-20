@@ -3,7 +3,7 @@ using TMPro;
 
 public class HarnessGravity : MonoBehaviour
 {
-    public TextMeshProUGUI debugText;
+    //public TextMeshProUGUI debugText;
 
     Transform obj;
     Rigidbody objRigidBody;
@@ -21,7 +21,7 @@ public class HarnessGravity : MonoBehaviour
         obj = null;
 
 
-        debugText.text = "x";
+        //debugText.text = "x";
     }
 
     // Update is called once per frame
@@ -34,7 +34,7 @@ public class HarnessGravity : MonoBehaviour
             obj = hit.transform;
             objRigidBody = hit.rigidbody;
 
-            debugText.text = obj.transform.name;
+            //debugText.text = obj.transform.name;
 
             if (!objRigidBody.useGravity)
                 objRigidBody.useGravity = true;
@@ -48,7 +48,7 @@ public class HarnessGravity : MonoBehaviour
             }
         }
         
-        else
-            debugText.text = "x";
+        //else
+            //debugText.text = "x";
     }
 }
