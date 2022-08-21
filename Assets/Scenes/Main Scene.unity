@@ -17871,7 +17871,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1129706520}
-  - component: {fileID: 1129706521}
   m_Layer: 0
   m_Name: Hand Grab Pose Recorder
   m_TagString: Untagged
@@ -17893,44 +17892,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1129706521
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1129706519}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 826882dcb55017a46ab71dddc25ab18e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _leftHand: {fileID: 4953423826374516300}
-  _rightHand: {fileID: 7580126071598173397}
-  _ghostProvider: {fileID: 11400000, guid: ba24f6f783d84ef4f8ff075364e1283c, type: 2}
-  _timerControl: {fileID: 0}
-  _delayLabel: {fileID: 0}
-  WhenTimeStep:
-    m_PersistentCalls:
-      m_Calls: []
-  WhenSnapshot:
-    m_PersistentCalls:
-      m_Calls: []
-  WhenError:
-    m_PersistentCalls:
-      m_Calls: []
-  WhenCanUndo:
-    m_PersistentCalls:
-      m_Calls: []
-  WhenCanRedo:
-    m_PersistentCalls:
-      m_Calls: []
-  WhenGrabAllowed:
-    m_PersistentCalls:
-      m_Calls: []
-  WhenGrabDisallowed:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &1132415231
 GameObject:
   m_ObjectHideFlags: 0

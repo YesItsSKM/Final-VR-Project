@@ -45,6 +45,7 @@ namespace Oculus.Interaction.HandPosing.Visuals
         }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
         public static bool TryGetDefault(out HandGhostProvider provider)
         {
@@ -57,6 +58,8 @@ namespace Oculus.Interaction.HandPosing.Visuals
             provider = null;
             return false;
         }
+=======
+>>>>>>> parent of 8f09b86 (Ready to add hand pose recording system)
 =======
 >>>>>>> parent of 8f09b86 (Ready to add hand pose recording system)
 =======
