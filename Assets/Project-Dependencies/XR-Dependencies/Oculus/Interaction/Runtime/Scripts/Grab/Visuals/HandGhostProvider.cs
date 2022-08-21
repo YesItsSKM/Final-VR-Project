@@ -43,6 +43,7 @@ namespace Oculus.Interaction.HandPosing.Visuals
         {
             return handedness == Handedness.Left ? _leftHand : _rightHand;
         }
+<<<<<<< HEAD
 
         public static bool TryGetDefault(out HandGhostProvider provider)
         {
@@ -55,5 +56,7 @@ namespace Oculus.Interaction.HandPosing.Visuals
             provider = null;
             return false;
         }
+=======
+>>>>>>> parent of 8f09b86 (Ready to add hand pose recording system)
     }
 }
