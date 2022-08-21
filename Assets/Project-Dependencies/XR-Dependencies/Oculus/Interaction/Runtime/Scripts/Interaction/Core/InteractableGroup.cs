@@ -1,26 +1,17 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
@@ -88,14 +79,12 @@ namespace Oculus.Interaction
             {
                 foreach (IInteractable interactable in Interactables)
                 {
-                    interactable.WhenInteractorViewAdded += HandleInteractorViewAdded;
-                    interactable.WhenInteractorViewRemoved += HandleInteractorViewRemoved;
-                    interactable.WhenSelectingInteractorViewAdded += HandleSelectingInteractorViewAdded;
-                    interactable.WhenSelectingInteractorViewRemoved += HandleSelectingInteractorViewRemoved;
+                    interactable.WhenInteractorsCountUpdated += CountWhenInteractors;
+                    interactable.WhenSelectingInteractorsCountUpdated += CountWhenSelectingInteractors;
                 }
 
-                UpdateInteractorCount();
-                UpdateSelectingInteractorCount();
+                CountWhenInteractors();
+                CountWhenSelectingInteractors();
             }
         }
 
@@ -105,48 +94,25 @@ namespace Oculus.Interaction
             {
                 foreach (IInteractable interactable in Interactables)
                 {
-                    interactable.WhenInteractorViewAdded -= HandleInteractorViewAdded;
-                    interactable.WhenInteractorViewRemoved -= HandleInteractorViewRemoved;
-                    interactable.WhenSelectingInteractorViewAdded -= HandleSelectingInteractorViewAdded;
-                    interactable.WhenSelectingInteractorViewRemoved -= HandleSelectingInteractorViewRemoved;
+                    interactable.WhenInteractorsCountUpdated -= CountWhenInteractors;
+                    interactable.WhenSelectingInteractorsCountUpdated -= CountWhenSelectingInteractors;
                 }
 
-                UpdateInteractorCount();
-                UpdateSelectingInteractorCount();
+                CountWhenInteractors();
+                CountWhenSelectingInteractors();
             }
         }
 
-        private void UpdateInteractorCount()
+        private void CountWhenInteractors()
         {
             _interactors = 0;
             foreach (IInteractable interactable in Interactables)
             {
-                _interactors += interactable.InteractorViews.Count();
+                _interactors += interactable.InteractorsCount;
             }
 
             UpdateMaxInteractors();
-
         }
-
-        private void UpdateSelectingInteractorCount()
-        {
-            _selectInteractors = 0;
-            foreach (IInteractable interactable in Interactables)
-            {
-                _selectInteractors += interactable.SelectingInteractorViews.Count();
-            }
-
-            UpdateMaxSelecting();
-        }
-
-        private void HandleInteractorViewAdded(IInteractorView interactorView) =>
-            UpdateInteractorCount();
-        private void HandleInteractorViewRemoved(IInteractorView interactorView) =>
-            UpdateInteractorCount();
-        private void HandleSelectingInteractorViewAdded(IInteractorView interactorView) =>
-            UpdateInteractorCount();
-        private void HandleSelectingInteractorViewRemoved(IInteractorView interactorView) =>
-            UpdateInteractorCount();
 
         private void UpdateMaxInteractors()
         {
@@ -157,11 +123,22 @@ namespace Oculus.Interaction
                 Interactables[i].MaxInteractors = (_limits[i].MaxInteractors == -1
                     ? remainingInteractors
                     : Mathf.Max(0, _limits[i].MaxInteractors - _interactors)) +
-                                                  Interactables[i].InteractorViews.Count();
+                                                  Interactables[i].InteractorsCount;
             }
         }
 
-        private void UpdateMaxSelecting()
+        private void CountWhenSelectingInteractors()
+        {
+            _selectInteractors = 0;
+            foreach (IInteractable interactable in Interactables)
+            {
+                _selectInteractors += interactable.SelectingInteractorsCount;
+            }
+
+            UpdateMaxActive();
+        }
+
+        private void UpdateMaxActive()
         {
             if (_maxSelectingInteractors == -1) return;
             int remainingActive = Mathf.Max(0, _maxSelectingInteractors - _selectInteractors);
@@ -170,7 +147,7 @@ namespace Oculus.Interaction
                 Interactables[i].MaxSelectingInteractors = (_limits[i].MaxSelectingInteractors == -1
                     ? remainingActive
                     : Mathf.Max(0, _limits[i].MaxSelectingInteractors - _selectInteractors)) +
-                                                           Interactables[i].SelectingInteractorViews.Count();
+                                                        Interactables[i].SelectingInteractorsCount;
             }
         }
 

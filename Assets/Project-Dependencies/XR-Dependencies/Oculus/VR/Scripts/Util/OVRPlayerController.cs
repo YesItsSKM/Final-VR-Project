@@ -1,32 +1,14 @@
-/*
- * ----------------------------------------------------------------------------------------------------------------------------------
- * 
- * THIS FILE IS BEEN UPDATED.
- * Shubham Kumar Maurya, 2022 - I've added functions and variables that uses hand pose detection to update the player controller.
- * 
- * The sections containing my code will be between comment section named 'SKM'
- * 
- * ----------------------------------------------------------------------------------------------------------------------------------
- * 
- * 
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
 
 using System;
 using UnityEngine;
@@ -37,13 +19,10 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class OVRPlayerController : MonoBehaviour
 {
-
 	/// <summary>
 	/// The rate acceleration during movement.
 	/// </summary>
 	public float Acceleration = 0.1f;
-	
-	public float BackwardsAcceleration = 2f; // SKM - Added additional variable for backwards acceleration
 
 	/// <summary>
 	/// The rate of damping on movement.
@@ -162,24 +141,13 @@ public class OVRPlayerController : MonoBehaviour
 	public bool RotationEitherThumbstick = false;
 
 	protected CharacterController Controller = null;
-	[HideInInspector] public OVRCameraRig CameraRig = null;			// SKM - Made this public
+	protected OVRCameraRig CameraRig = null;
 
 	private float MoveScale = 1.0f;
 	private Vector3 MoveThrottle = Vector3.zero;
 	private float FallSpeed = 0.0f;
 	private OVRPose? InitialPose;
-
-
-    // SKM
-	[HideInInspector] public bool HandPoseMoveForward = false;
-	[HideInInspector] public bool HandPoseMoveBackward = false;
-	[HideInInspector] public bool HandPoseRotateRight = false;
-	[HideInInspector] public bool HandPoseRotateLeft = false;
-
-    // SKM
-
-
-    public float InitialYRotation { get; private set; }
+	public float InitialYRotation { get; private set; }
 	private float MoveScaleMultiplier = 1.0f;
 	private float RotationScaleMultiplier = 1.0f;
 	private bool SkipMouseRotation = true; // It is rare to want to use mouse movement in VR, so ignore the mouse by default.
@@ -373,13 +341,14 @@ public class OVRPlayerController : MonoBehaviour
 
 			bool dpad_move = false;
 
-			if (OVRInput.Get(OVRInput.Button.DpadUp) || HandPoseMoveForward)
+			if (OVRInput.Get(OVRInput.Button.DpadUp))
 			{
 				moveForward = true;
 				dpad_move = true;
+
 			}
 
-			if (OVRInput.Get(OVRInput.Button.DpadDown) || HandPoseMoveBackward)
+			if (OVRInput.Get(OVRInput.Button.DpadDown))
 			{
 				moveBack = true;
 				dpad_move = true;
@@ -412,7 +381,7 @@ public class OVRPlayerController : MonoBehaviour
 			if (moveForward)
 				MoveThrottle += ort * (transform.lossyScale.z * moveInfluence * Vector3.forward);
 			if (moveBack)
-				MoveThrottle += ort * (transform.lossyScale.z * moveInfluence * BackwardsAcceleration * BackAndSideDampen * Vector3.back); // SKM - Updated the function by multiplying with 'BackwardsAcceleration'
+				MoveThrottle += ort * (transform.lossyScale.z * moveInfluence * BackAndSideDampen * Vector3.back);
 			if (moveLeft)
 				MoveThrottle += ort * (transform.lossyScale.x * moveInfluence * BackAndSideDampen * Vector3.left);
 			if (moveRight)
@@ -482,7 +451,7 @@ public class OVRPlayerController : MonoBehaviour
 			if (SnapRotation)
 			{
 				if (OVRInput.Get(OVRInput.Button.SecondaryThumbstickLeft) ||
-					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickLeft)) || HandPoseRotateLeft)
+					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickLeft)))
 				{
 					if (ReadyToSnapTurn)
 					{
@@ -491,7 +460,7 @@ public class OVRPlayerController : MonoBehaviour
 					}
 				}
 				else if (OVRInput.Get(OVRInput.Button.SecondaryThumbstickRight) ||
-					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickRight)) || HandPoseRotateRight)
+					(RotationEitherThumbstick && OVRInput.Get(OVRInput.Button.PrimaryThumbstickRight)))
 				{
 					if (ReadyToSnapTurn)
 					{
@@ -510,11 +479,10 @@ public class OVRPlayerController : MonoBehaviour
 				if (RotationEitherThumbstick)
 				{
 					Vector2 altSecondaryAxis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick);
-					if ((secondaryAxis.sqrMagnitude < altSecondaryAxis.sqrMagnitude) || HandPoseRotateLeft || HandPoseRotateRight)
+					if (secondaryAxis.sqrMagnitude < altSecondaryAxis.sqrMagnitude)
 					{
-                        Vector2 handPoseRotation = HandPoseRotateLeft ? Vector2.left : Vector2.right;
-                        secondaryAxis = (HandPoseRotateLeft || HandPoseRotateRight) ? handPoseRotation : altSecondaryAxis;
-                    }
+						secondaryAxis = altSecondaryAxis;
+					}
 				}
 				euler.y += secondaryAxis.x * rotateInfluence;
 			}

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,18 +15,20 @@ namespace Facebook.WitAi.Windows
     public class WitWelcomeWizard : WitScriptableWizard
     {
         protected string serverToken;
-        public Action<WitConfiguration> successAction;
+        public Action successAction;
 
-        protected override Texture2D HeaderIcon => WitTexts.HeaderIcon;
-        protected override GUIContent Title => WitTexts.SetupTitleContent;
-        protected override string ButtonLabel => WitTexts.Texts.SetupSubmitButtonLabel;
-        protected override string ContentSubheaderLabel => WitTexts.Texts.SetupSubheaderLabel;
+        protected override Texture2D HeaderIcon => WitStyles.HeaderIcon;
+        protected override GUIContent Title => WitStyles.SetupTitleContent;
+        protected override string ButtonLabel => WitStyles.Texts.SetupSubmitButtonLabel;
+        protected override string ContentSubheaderLabel => WitStyles.Texts.SetupSubheaderLabel;
 
         protected override void OnEnable()
         {
             base.OnEnable();
-            serverToken = string.Empty;
-            WitAuthUtility.ServerToken = serverToken;
+            if (string.IsNullOrEmpty(serverToken))
+            {
+                serverToken = WitAuthUtility.ServerToken;
+            }
         }
         protected override bool DrawWizardGUI()
         {
@@ -38,11 +39,11 @@ namespace Facebook.WitAi.Windows
         }
         protected override void LayoutFields()
         {
-            string serverTokenLabelText = WitTexts.Texts.SetupServerTokenLabel;
+            string serverTokenLabelText = WitStyles.Texts.SetupServerTokenLabel;
             serverTokenLabelText = serverTokenLabelText.Replace(WitStyles.WitLinkKey, WitStyles.WitLinkColor);
             if (GUILayout.Button(serverTokenLabelText, WitStyles.Label))
             {
-                Application.OpenURL(WitTexts.GetAppURL("", WitTexts.WitAppEndpointType.Settings));
+                Application.OpenURL(WitStyles.GetAppURL("", WitStyles.WitAppEndpointType.Settings));
             }
             bool updated = false;
             WitEditorUI.LayoutPasswordField(null, ref serverToken, ref updated);
@@ -62,20 +63,19 @@ namespace Facebook.WitAi.Windows
                 {
                     // Complete
                     Close();
-                    WitConfiguration c = WitConfigurationUtility.WitConfigs[index];
                     if (successAction == null)
                     {
-                        WitWindowUtility.OpenConfigurationWindow(c);
+                        WitWindowUtility.OpenConfigurationWindow();
                     }
                     else
                     {
-                        successAction(c);
+                        successAction();
                     }
                 }
             }
             else
             {
-                throw new ArgumentException(WitTexts.Texts.SetupSubmitFailLabel);
+                throw new ArgumentException(WitStyles.Texts.SetupSubmitFailLabel);
             }
         }
         protected virtual int CreateConfiguration(string newToken)

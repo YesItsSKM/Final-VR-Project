@@ -1,24 +1,15 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
-using Oculus.Interaction.Input;
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -99,16 +90,14 @@ namespace Oculus.Interaction.Throw
             "then a last resort method is used.")]
         private float _maxPercentZeroSamplesTrendVeloc = 0.5f;
 
-        [Header("Sampling filtering.")]
-        [SerializeField]
-        private OneEuroFilterPropertyBlock _filterProps = OneEuroFilterPropertyBlock.Default;
+        [SerializeField, Tooltip("Lower this number in case linear release velocity feels " +
+            "too fast. It scales each linear velocity sample buffered.")]
+        private float _linearVelocityScaleModifier = 0.8f;
 
         public float UpdateFrequency => _updateFrequency;
         private float _updateFrequency = -1.0f;
         private float _updateLatency = -1.0f;
         private float _lastUpdateTime = -1.0f;
-
-        private IOneEuroFilter<Vector3> _linearVelocityFilter;
 
         public Vector3 ReferenceOffset
         {
@@ -122,8 +111,7 @@ namespace Oculus.Interaction.Throw
             }
         }
 
-        public float InstantVelocityInfluence
-        {
+        public float InstantVelocityInfluence {
             get
             {
                 return _instantVelocityInfluence;
@@ -194,6 +182,18 @@ namespace Oculus.Interaction.Throw
             }
         }
 
+        public float LinearVelocityScaleModifier
+        {
+            get
+            {
+                return _linearVelocityScaleModifier;
+            }
+            set
+            {
+                _linearVelocityScaleModifier = value;
+            }
+        }
+
         public Vector3 AddedInstantLinearVelocity { get; private set; }
         public Vector3 AddedTrendLinearVelocity { get; private set; }
         public Vector3 AddedTangentialLinearVelocity { get; private set; }
@@ -242,8 +242,6 @@ namespace Oculus.Interaction.Throw
                 * _bufferingParams.SampleFrequency);
             _bufferedPoses.Capacity = _bufferSize;
 
-            _linearVelocityFilter = OneEuroFilter.CreateVector3();
-
             Assert.IsNotNull(ThrowInputDevice);
         }
 
@@ -287,9 +285,6 @@ namespace Oculus.Interaction.Throw
 
             _bufferedPoses.Clear();
             _lastWritePos = -1;
-
-            _linearVelocityFilter.Reset();
-
             return newVelocity;
         }
 
@@ -662,11 +657,10 @@ namespace Oculus.Interaction.Throw
         {
             (_linearVelocity, _angularVelocity) = GetLatestLinearAndAngularVelocities(
                 referencePose, delta);
-             _linearVelocity = _linearVelocityFilter.Step(_linearVelocity);
+            _linearVelocity *= _linearVelocityScaleModifier;
 
-            var newReleaseVelocInfo = new ReleaseVelocityInformation(_linearVelocity, _angularVelocity,
-                referencePose.position);
-            WhenNewSampleAvailable(newReleaseVelocInfo);
+            WhenNewSampleAvailable(new ReleaseVelocityInformation(_linearVelocity, _angularVelocity,
+                referencePose.position));
 
             _previousReferencePosition = referencePose.position;
             _previousReferenceRotation = referencePose.rotation;
@@ -680,6 +674,7 @@ namespace Oculus.Interaction.Throw
             {
                 return (Vector3.zero, Vector3.zero);
             }
+
             Vector3 newLinearVelocity = (referencePose.position -
                 _previousReferencePosition.Value) / delta;
             var newAngularVelocity = VelocityCalculatorUtilMethods.ToAngularVelocity(

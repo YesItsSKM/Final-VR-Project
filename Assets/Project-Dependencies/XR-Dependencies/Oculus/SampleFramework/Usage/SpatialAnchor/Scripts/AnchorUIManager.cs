@@ -1,333 +1,324 @@
-// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+// Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>
 /// Manages UI of anchor sample.
 /// </summary>
-[RequireComponent(typeof(SpatialAnchorLoader))]
 public class AnchorUIManager : MonoBehaviour
 {
-	/// <summary>
-	/// Anchor UI manager singleton instance
-	/// </summary>
-	public static AnchorUIManager Instance;
+    /// <summary>
+    /// Anchor UI manager singleton instance
+    /// </summary>
+    public static AnchorUIManager Instance;
 
-	/// <summary>
-	/// Anchor Mode switches between create and select
-	/// </summary>
-	public enum AnchorMode { Create, Select };
+    /// <summary>
+    /// Anchor Mode switches between create and select
+    /// </summary>
+    public enum AnchorMode { Create, Select };
 
-	[SerializeField, FormerlySerializedAs("createModeButton_")]
-	private GameObject _createModeButton;
+    [SerializeField]
+    private GameObject mainMenu_ = null;
 
-	[SerializeField, FormerlySerializedAs("selectModeButton_")]
-	private GameObject _selectModeButton;
+    [SerializeField]
+    private GameObject createModeButton_;
+    [SerializeField]
+    private GameObject selectModeButton_;
 
-	[SerializeField, FormerlySerializedAs("trackedDevice_")]
-	private Transform _trackedDevice;
+    [SerializeField]
+    private Transform trackedDevice_;
+    private Transform raycastOrigin_;
+    private bool drawRaycast_ = false;
+    [SerializeField]
+    private LineRenderer lineRenderer_;
 
-	private Transform _raycastOrigin;
+    private Anchor hoveredAnchor_;
+    private Anchor selectedAnchor_;
 
-	private bool _drawRaycast = false;
+    private AnchorMode mode_ = AnchorMode.Create;
 
-	[SerializeField, FormerlySerializedAs("lineRenderer_")]
-	private LineRenderer _lineRenderer;
+    [SerializeField]
+    private List<Button> buttonList_;
 
-	private Anchor _hoveredAnchor;
+    private int menuIndex_ = 0;
+    private Button selectedButton_;
 
-	private Anchor _selectedAnchor;
+    [SerializeField]
+    private GameObject placementPreview_;
 
-	private AnchorMode _mode = AnchorMode.Create;
+    [SerializeField]
+    private Transform anchorPlacementTransform_;
 
-	[SerializeField, FormerlySerializedAs("buttonList_")]
-	private List<Button> _buttonList;
+    private delegate void PrimaryPressDelegate();
+    private PrimaryPressDelegate primaryPressDelegate_;
 
-	private int _menuIndex = 0;
+    private bool isFocused_ = true;
 
-	private Button _selectedButton;
+    #region Monobehaviour Methods
 
-	[SerializeField]
-	private Anchor _anchorPrefab;
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
+    }
 
-	public Anchor AnchorPrefab => _anchorPrefab;
+    private void Start()
+    {
+        raycastOrigin_ = trackedDevice_;
 
-	[SerializeField, FormerlySerializedAs("placementPreview_")]
-	private GameObject _placementPreview;
+        selectedButton_ = buttonList_[0];
+        buttonList_[0].OnSelect(null);
 
-	[SerializeField, FormerlySerializedAs("anchorPlacementTransform_")]
-	private Transform _anchorPlacementTransform;
+        lineRenderer_.startWidth = 0.005f;
+        lineRenderer_.endWidth = 0.005f;
 
-	private delegate void PrimaryPressDelegate();
+        ToggleCreateMode();
+    }
 
-	private PrimaryPressDelegate _primaryPressDelegate;
+    private void Update()
+    {
+        if (drawRaycast_)
+        {
+            ControllerRaycast();
+        }
 
-	private bool _isFocused = true;
+        if (selectedAnchor_ == null)
+        {
+            // Refocus menu
+            selectedButton_.OnSelect(null);
+            isFocused_ = true;
+        }
 
-	#region Monobehaviour Methods
+        HandleMenuNavigation();
 
-	private void Awake()
-	{
-		if (Instance == null)
-		{
-			Instance = this;
-		}
-		else
-		{
-			Destroy(this);
-		}
-	}
+        if (OVRInput.GetDown(OVRInput.RawButton.A))
+        {
+            primaryPressDelegate_?.Invoke();
+        }
+    }
 
-	private void Start()
-	{
-		_raycastOrigin = _trackedDevice;
-
-		_selectedButton = _buttonList[0];
-		_buttonList[0].OnSelect(null);
-
-		_lineRenderer.startWidth = 0.005f;
-		_lineRenderer.endWidth = 0.005f;
-
-		ToggleCreateMode();
-	}
-
-	private void Update()
-	{
-		if (_drawRaycast)
-		{
-			ControllerRaycast();
-		}
-
-		if (_selectedAnchor == null)
-		{
-			// Refocus menu
-			_selectedButton.OnSelect(null);
-			_isFocused = true;
-		}
-
-		HandleMenuNavigation();
-
-		if (OVRInput.GetDown(OVRInput.RawButton.A))
-		{
-			_primaryPressDelegate?.Invoke();
-		}
-	}
-
-	#endregion // Monobehaviour Methods
+    #endregion // Monobehaviour Methods
 
 
-	#region Menu UI Callbacks
+    #region Menu UI Callbacks
 
-	/// <summary>
-	/// Create mode button pressed UI callback. Referenced by the Create button in the menu.
-	/// </summary>
-	public void OnCreateModeButtonPressed()
-	{
-		ToggleCreateMode();
-		_createModeButton.SetActive(!_createModeButton.activeSelf);
-		_selectModeButton.SetActive(!_selectModeButton.activeSelf);
-	}
+    /// <summary>
+    /// Create mode button pressed UI callback. Referenced by the Create button in the menu.
+    /// </summary>
+    public void OnCreateModeButtonPressed()
+    {
+        ToggleCreateMode();
+        createModeButton_.SetActive(!createModeButton_.activeSelf);
+        selectModeButton_.SetActive(!selectModeButton_.activeSelf);
+    }
 
-	/// <summary>
-	/// Load anchors button pressed UI callback. Referenced by the Load Anchors button in the menu.
-	/// </summary>
-	public void OnLoadAnchorsButtonPressed()
-	{
-		GetComponent<SpatialAnchorLoader>().LoadAllLocalAnchors();
-	}
+    /// <summary>
+    /// Load anchors button pressed UI callback. Referenced by the Load Anchors button in the menu.
+    /// </summary>
+    public void OnLoadAnchorsButtonPressed()
+    {
+        AnchorSession.Instance.QueryAllLocalAnchors();
+    }
 
-	#endregion // Menu UI Callbacks
-
-	#region Mode Handling
-
-	private void ToggleCreateMode()
-	{
-		if (_mode == AnchorMode.Select)
-		{
-			_mode = AnchorMode.Create;
-			EndSelectMode();
-			StartPlacementMode();
-		}
-		else
-		{
-			_mode = AnchorMode.Select;
-			EndPlacementMode();
-			StartSelectMode();
-		}
-	}
-
-	private void StartPlacementMode()
-	{
-		ShowAnchorPreview();
-		_primaryPressDelegate = PlaceAnchor;
-	}
-
-	private void EndPlacementMode()
-	{
-		HideAnchorPreview();
-		_primaryPressDelegate = null;
-	}
-
-	private void StartSelectMode()
-	{
-		ShowRaycastLine();
-		_primaryPressDelegate = SelectAnchor;
-	}
-
-	private void EndSelectMode()
-	{
-		HideRaycastLine();
-		_primaryPressDelegate = null;
-	}
-
-	#endregion // Mode Handling
+    #endregion // Menu UI Callbacks
 
 
-	#region Private Methods
+    #region Mode Handling
 
-	private void HandleMenuNavigation()
-	{
-		if (!_isFocused)
-		{
-			return;
-		}
-		if (OVRInput.GetDown(OVRInput.RawButton.RThumbstickUp))
-		{
-			NavigateToIndexInMenu(false);
-		}
-		if (OVRInput.GetDown(OVRInput.RawButton.RThumbstickDown))
-		{
-			NavigateToIndexInMenu(true);
-		}
-		if (OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger))
-		{
-			_selectedButton.OnSubmit(null);
-		}
-	}
+    private void ToggleCreateMode()
+    {
+        if (mode_ == AnchorMode.Select)
+        {
+            mode_ = AnchorMode.Create;
+            EndSelectMode();
+            StartPlacementMode();
+        }
+        else
+        {
+            mode_ = AnchorMode.Select;
+            EndPlacementMode();
+            StartSelectMode();
+        }
+    }
 
-	private void NavigateToIndexInMenu(bool moveNext)
-	{
-		if (moveNext)
-		{
-			_menuIndex++;
-			if (_menuIndex > _buttonList.Count - 1)
-			{
-				_menuIndex = 0;
-			}
-		}
-		else
-		{
-			_menuIndex--;
-			if (_menuIndex < 0)
-			{
-				_menuIndex = _buttonList.Count - 1;
-			}
-		}
-		_selectedButton.OnDeselect(null);
-		_selectedButton = _buttonList[_menuIndex];
-		_selectedButton.OnSelect(null);
-	}
+    private void StartPlacementMode()
+    {
+        ShowAnchorPreview();
+        primaryPressDelegate_ = PlaceAnchor;
+    }
 
-	private void ShowAnchorPreview()
-	{
-		_placementPreview.SetActive(true);
-	}
+    private void EndPlacementMode()
+    {
+        HideAnchorPreview();
+        primaryPressDelegate_ = null;
+    }
 
-	private void HideAnchorPreview()
-	{
-		_placementPreview.SetActive(false);
-	}
+    private void StartSelectMode()
+    {
+        ShowRaycastLine();
+        primaryPressDelegate_ = SelectAnchor;
+    }
 
-	private void PlaceAnchor()
-	{
-		Instantiate(_anchorPrefab, _anchorPlacementTransform.position, _anchorPlacementTransform.rotation);
-	}
+    private void EndSelectMode()
+    {
+        HideRaycastLine();
+        primaryPressDelegate_ = null;
+    }
 
-	private void ShowRaycastLine()
-	{
-		_drawRaycast = true;
-		_lineRenderer.gameObject.SetActive(true);
-	}
+    #endregion // Mode Handling
 
-	private void HideRaycastLine()
-	{
-		_drawRaycast = false;
-		_lineRenderer.gameObject.SetActive(false);
-	}
 
-	private void ControllerRaycast()
-	{
-		Ray ray = new Ray(_raycastOrigin.position, _raycastOrigin.TransformDirection(Vector3.forward));
-		_lineRenderer.SetPosition(0, _raycastOrigin.position);
-		_lineRenderer.SetPosition(1, _raycastOrigin.position + _raycastOrigin.TransformDirection(Vector3.forward) * 10f);
+    #region Private Methods
 
-		RaycastHit hit;
-		if (Physics.Raycast(ray, out hit, Mathf.Infinity))
-		{
-			Anchor anchorObject = hit.collider.GetComponent<Anchor>();
-			if (anchorObject != null)
-			{
-				_lineRenderer.SetPosition(1, hit.point);
+    private void HandleMenuNavigation()
+    {
+        if (!isFocused_)
+        {
+            return;
+        }
+        if (OVRInput.GetDown(OVRInput.RawButton.RThumbstickUp))
+        {
+            NavigateToIndexInMenu(false);
+        }
+        if (OVRInput.GetDown(OVRInput.RawButton.RThumbstickDown))
+        {
+            NavigateToIndexInMenu(true);
+        }
+        if (OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger))
+        {
+            selectedButton_.OnSubmit(null);
+        }
+    }
 
-				HoverAnchor(anchorObject);
-				return;
-			}
-		}
-		UnhoverAnchor();
-	}
+    private void NavigateToIndexInMenu(bool moveNext)
+    {
+        if (moveNext)
+        {
+            menuIndex_++;
+            if (menuIndex_ > buttonList_.Count - 1)
+            {
+                menuIndex_ = 0;
+            }
+        }
+        else
+        {
+            menuIndex_--;
+            if (menuIndex_ < 0)
+            {
+                menuIndex_ = buttonList_.Count - 1;
+            }
+        }
+        selectedButton_.OnDeselect(null);
+        selectedButton_ = buttonList_[menuIndex_];
+        selectedButton_.OnSelect(null);
+    }
 
-	private void HoverAnchor(Anchor anchor)
-	{
-		_hoveredAnchor = anchor;
-		_hoveredAnchor.OnHoverStart();
-	}
+    private void ShowAnchorPreview()
+    {
+        placementPreview_.SetActive(true);
+    }
 
-	private void UnhoverAnchor()
-	{
-		if (_hoveredAnchor == null)
-		{
-			return;
-		}
-		_hoveredAnchor.OnHoverEnd();
-		_hoveredAnchor = null;
-	}
+    private void HideAnchorPreview()
+    {
+        placementPreview_.SetActive(false);
+    }
 
-	private void SelectAnchor()
-	{
-		if (_hoveredAnchor != null)
-		{
-			if (_selectedAnchor != null)
-			{
-				// Deselect previous Anchor
-				_selectedAnchor.OnSelect();
-				_selectedAnchor = null;
-			}
+    private void PlaceAnchor()
+    {
+        AnchorSpawner.Instance.PlaceAnchorAtTransform(anchorPlacementTransform_);
+    }
 
-			// Select new Anchor
-			_selectedAnchor = _hoveredAnchor;
-			_selectedAnchor.OnSelect();
+    private void ShowRaycastLine()
+    {
+        drawRaycast_ = true;
+        lineRenderer_.gameObject.SetActive(true);
+    }
 
-			// Defocus menu
-			_selectedButton.OnDeselect(null);
-			_isFocused = false;
-		}
-		else
-		{
-			if (_selectedAnchor != null)
-			{
-				// Deselect previous Anchor
-				_selectedAnchor.OnSelect();
-				_selectedAnchor = null;
+    private void HideRaycastLine()
+    {
+        drawRaycast_ = false;
+        lineRenderer_.gameObject.SetActive(false);
+    }
 
-				// Refocus menu
-				_selectedButton.OnSelect(null);
-				_isFocused = true;
-			}
-		}
-	}
+    private void ControllerRaycast()
+    {
+        Ray ray = new Ray(raycastOrigin_.position, raycastOrigin_.TransformDirection(Vector3.forward));
+        lineRenderer_.SetPosition(0, raycastOrigin_.position);
+        lineRenderer_.SetPosition(1, raycastOrigin_.position + raycastOrigin_.TransformDirection(Vector3.forward) * 10f);
 
-	#endregion // Private Methods
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            Anchor anchorObject = hit.collider.GetComponent<Anchor>();
+            if (anchorObject != null)
+            {
+                lineRenderer_.SetPosition(1, hit.point);
+
+                HoverAnchor(anchorObject);
+                return;
+            }
+        }
+        UnhoverAnchor();
+    }
+
+    private void HoverAnchor(Anchor anchor)
+    {
+        hoveredAnchor_ = anchor;
+        hoveredAnchor_.OnHoverStart();
+    }
+
+    private void UnhoverAnchor()
+    {
+        if (hoveredAnchor_ == null)
+        {
+            return;
+        }
+        hoveredAnchor_.OnHoverEnd();
+        hoveredAnchor_ = null;
+    }
+
+    private void SelectAnchor()
+    {
+        if (hoveredAnchor_ != null)
+        {
+            if (selectedAnchor_ != null)
+            {
+                // Deselect previous Anchor
+                selectedAnchor_.OnSelect();
+                selectedAnchor_ = null;
+            }
+
+            // Select new Anchor
+            selectedAnchor_ = hoveredAnchor_;
+            selectedAnchor_.OnSelect();
+
+            // Defocus menu
+            selectedButton_.OnDeselect(null);
+            isFocused_ = false;
+        }
+        else
+        {
+            if (selectedAnchor_ != null)
+            {
+                // Deselect previous Anchor
+                selectedAnchor_.OnSelect();
+                selectedAnchor_ = null;
+
+                // Refocus menu
+                selectedButton_.OnSelect(null);
+                isFocused_ = true;
+            }
+        }
+    }
+
+    #endregion // Private Methods
+
 }

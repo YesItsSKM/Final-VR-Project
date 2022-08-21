@@ -1,28 +1,20 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
 
 using UnityEngine;
 using UnityEngine.Assertions;
 using System;
 
-namespace Oculus.Interaction.HandGrab.SnapSurfaces
+namespace Oculus.Interaction.HandPosing.SnapSurfaces
 {
     [Serializable]
     public class CylinderSurfaceData : ICloneable
@@ -32,8 +24,7 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
             CylinderSurfaceData clone = new CylinderSurfaceData();
             clone.startPoint = this.startPoint;
             clone.endPoint = this.endPoint;
-            clone.arcOffset = this.arcOffset;
-            clone.arcLength = this.arcLength;
+            clone.angle = this.angle;
             return clone;
         }
 
@@ -47,11 +38,7 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
         public Vector3 endPoint = new Vector3(0f, -0.1f, 0f);
 
         [Range(0f, 360f)]
-        public float arcOffset = 0f;
-        [Range(0f, 360f)]
-        [UnityEngine.Serialization.FormerlySerializedAs("angle")]
-        public float arcLength = 360f;
-
+        public float angle = 120f;
     }
 
     /// <summary>
@@ -107,7 +94,7 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
         /// <summary>
         /// Direction from the axis of the cylinder to the original grip position.
         /// </summary>
-        public Vector3 OriginalDir
+        public Vector3 StartAngleDir
         {
             get
             {
@@ -119,22 +106,14 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
             }
         }
 
-        public Vector3 StartArcDir
-        {
-            get
-            {
-                return Quaternion.AngleAxis(ArcOffset, Direction) * OriginalDir;
-            }
-        }
-
         /// <summary>
         /// Direction from the axis of the cylinder to the maximum angle allowance.
         /// </summary>
-        public Vector3 EndArcDir
+        public Vector3 EndAngleDir
         {
             get
             {
-                return Quaternion.AngleAxis(ArcLength, Direction) * StartArcDir;
+                return Quaternion.AngleAxis(Angle, Direction) * StartAngleDir;
             }
         }
 
@@ -196,45 +175,19 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
             }
         }
 
-        public float ArcOffset
-        {
-            get
-            {
-                return _data.arcOffset;
-            }
-            set
-            {
-                if (value != 0 && value % 360f == 0)
-                {
-                    _data.arcOffset = 360f;
-                }
-                else
-                {
-                    _data.arcOffset = Mathf.Repeat(value, 360f);
-                }
-            }
-        }
-
         /// <summary>
         /// The maximum angle for the surface of the cylinder, starting from the original grip position.
         /// To invert the direction of the angle, swap the caps order.
         /// </summary>
-        public float ArcLength
+        public float Angle
         {
             get
             {
-                return _data.arcLength;
+                return _data.angle;
             }
             set
             {
-                if (value != 0 && value % 360f == 0)
-                {
-                    _data.arcLength = 360f;
-                }
-                else
-                {
-                    _data.arcLength = Mathf.Repeat(value, 360f);
-                }
+                _data.angle = Mathf.Repeat(value, 360f);
             }
         }
 
@@ -291,7 +244,7 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
                 {
                     return Quaternion.LookRotation(Vector3.forward);
                 }
-                return Quaternion.LookRotation(OriginalDir, Direction);
+                return Quaternion.LookRotation(StartAngleDir, Direction);
             }
         }
 
@@ -299,9 +252,9 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
         private void Reset()
         {
             _gripPoint = this.transform;
-            if (this.TryGetComponent(out HandGrabPose grabPose))
+            if (this.TryGetComponent(out HandGrabPoint grabPoint))
             {
-                _relativeTo = grabPose.RelativeTo;
+                _relativeTo = grabPoint.RelativeTo;
             }
         }
         #endregion
@@ -315,7 +268,7 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
 
         public Pose MirrorPose(in Pose pose)
         {
-            Vector3 normal = Quaternion.Inverse(this.RelativeTo.rotation) * OriginalDir;
+            Vector3 normal = Quaternion.Inverse(this.RelativeTo.rotation) * StartAngleDir;
             Vector3 tangent = Quaternion.Inverse(this.RelativeTo.rotation) * Direction;
 
             return pose.MirrorPoseRotation(normal, tangent);
@@ -367,16 +320,16 @@ namespace Oculus.Interaction.HandGrab.SnapSurfaces
             Vector3 projectedPoint = StartPoint + projectedVector;
             Vector3 targetDirection = Vector3.ProjectOnPlane((targetPosition - projectedPoint), dir).normalized;
             //clamp of the surface
-            float desiredAngle = Mathf.Repeat(Vector3.SignedAngle(StartArcDir, targetDirection, dir), 360f);
-            if (desiredAngle > ArcLength)
+            float desiredAngle = Mathf.Repeat(Vector3.SignedAngle(StartAngleDir, targetDirection, dir), 360f);
+            if (desiredAngle > Angle)
             {
-                if (Mathf.Abs(desiredAngle - ArcLength) >= Mathf.Abs(360f - desiredAngle))
+                if (Mathf.Abs(desiredAngle - Angle) >= Mathf.Abs(360f - desiredAngle))
                 {
-                    targetDirection = StartArcDir;
+                    targetDirection = StartAngleDir;
                 }
                 else
                 {
-                    targetDirection = EndArcDir;
+                    targetDirection = EndAngleDir;
                 }
             }
             Vector3 surfacePoint = projectedPoint + targetDirection * Radius;

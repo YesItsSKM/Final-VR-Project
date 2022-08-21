@@ -1,22 +1,14 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
 
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -104,7 +96,7 @@ namespace Oculus.Interaction
         {
             if (_started)
             {
-                Pointable.WhenPointerEventRaised += HandlePointerEventRaised;
+                Pointable.OnPointerEvent += HandlePointerEvent;
                 UpdateMaterialColor();
             }
         }
@@ -113,7 +105,7 @@ namespace Oculus.Interaction
         {
             if (_started)
             {
-                Pointable.WhenPointerEventRaised -= HandlePointerEventRaised;
+                Pointable.OnPointerEvent -= HandlePointerEvent;
             }
         }
 
@@ -122,25 +114,25 @@ namespace Oculus.Interaction
             Destroy(_material);
         }
 
-        private void HandlePointerEventRaised(PointerEvent evt)
+        private void HandlePointerEvent(PointerArgs args)
         {
-            switch (evt.Type)
+            switch (args.PointerEvent)
             {
-                case PointerEventType.Hover:
+                case PointerEvent.Hover:
                     _hover = true;
                     UpdateMaterialColor();
                     break;
-                case PointerEventType.Select:
+                case PointerEvent.Select:
                     _select = true;
                     UpdateMaterialColor();
                     break;
-                case PointerEventType.Move:
+                case PointerEvent.Move:
                     break;
-                case PointerEventType.Unselect:
+                case PointerEvent.Unselect:
                     _select = false;
                     UpdateMaterialColor();
                     break;
-                case PointerEventType.Unhover:
+                case PointerEvent.Unhover:
                     _hover = false;
                     UpdateMaterialColor();
                     break;

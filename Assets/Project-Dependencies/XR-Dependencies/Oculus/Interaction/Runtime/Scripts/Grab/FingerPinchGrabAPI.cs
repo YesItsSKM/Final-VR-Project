@@ -1,32 +1,20 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
 
 using Oculus.Interaction.Input;
 using UnityEngine;
 
 namespace Oculus.Interaction.GrabAPI
 {
-    /// <summary>
-    /// This Finger API uses an advanced calculation for the pinch value of the fingers
-    /// to detect if they are grabbing
-    /// </summary>
     public class FingerPinchGrabAPI : IFingerAPI
     {
         private bool _isPinchVisibilityGood;
@@ -34,7 +22,7 @@ namespace Oculus.Interaction.GrabAPI
         private float DistanceStopMax => _isPinchVisibilityGood ? PINCH_HQ_DISTANCE_STOP_MAX : PINCH_DISTANCE_STOP_MAX;
         private float DistanceStopOffset => _isPinchVisibilityGood ? PINCH_HQ_DISTANCE_STOP_OFFSET : PINCH_DISTANCE_STOP_OFFSET;
 
-        private const float PINCH_DISTANCE_START = 0.02f;
+        private const float PINCH_DISTANCE_START = 0.03f;
         private const float PINCH_DISTANCE_STOP_MAX = 0.1f;
         private const float PINCH_DISTANCE_STOP_OFFSET = 0.04f;
 
@@ -44,14 +32,10 @@ namespace Oculus.Interaction.GrabAPI
 
         private const float PINCH_HQ_VIEW_ANGLE_THRESHOLD = 40f;
 
-        private readonly HandJointId[] THUMB_JOINTS_SELECT = new[]
+        private HandJointId[] thumbJointList = new[]
         {
-            HandJointId.HandThumb3,
-            HandJointId.HandThumbTip
-        };
-
-        private readonly HandJointId[] THUMB_JOINTS_MAINTAIN = new[]
-        {
+            HandJointId.HandThumb0,
+            HandJointId.HandThumb1,
             HandJointId.HandThumb2,
             HandJointId.HandThumb3,
             HandJointId.HandThumbTip
@@ -201,7 +185,7 @@ namespace Oculus.Interaction.GrabAPI
                    _fingersPinchData[(int)finger].IsPinching == targetPinchState;
         }
 
-        public float GetFingerGrabScore(HandFinger finger)
+        public float GetFingerGrabStrength(HandFinger finger)
         {
             if (finger == HandFinger.Thumb)
             {
@@ -221,26 +205,18 @@ namespace Oculus.Interaction.GrabAPI
             ClearState();
 
             _isPinchVisibilityGood = PinchHasGoodVisibility(hand);
-
-            _fingersPinchData[0].UpdateTipPosition(hand);
-            for (int i = 1; i < Constants.NUM_FINGERS; ++i)
+            for (int i = 0; i < Constants.NUM_FINGERS; ++i)
             {
                 _fingersPinchData[i].UpdateTipPosition(hand);
+            }
 
-                float distance = float.PositiveInfinity;
-                if (_fingersPinchData[i].IsPinching)
-                {
-                    distance = GetClosestDistanceToThumb(hand, _fingersPinchData[i].TipPosition, THUMB_JOINTS_MAINTAIN);
-                }
-                if (IsPointNearThumb(hand, _fingersPinchData[i].TipPosition, THUMB_JOINTS_SELECT))
-                {
-                    distance = GetClosestDistanceToThumb(hand, _fingersPinchData[i].TipPosition, THUMB_JOINTS_SELECT);
-                }
-
+            for (int i = 1; i < Constants.NUM_FINGERS; ++i)
+            {
+                float distance = GetClosestDistanceToThumb(hand, _fingersPinchData[i].TipPosition);
                 _fingersPinchData[i].UpdateIsPinching(distance,
                     DistanceStart, DistanceStopOffset, DistanceStopMax);
                 float pinchPercent = (distance - DistanceStart) /
-                    (DistanceStopMax - DistanceStart);
+                                                 (DistanceStopMax - DistanceStart);
 
                 float pinchStrength = 1f - Mathf.Clamp01(pinchPercent);
                 _fingersPinchData[i].PinchStrength = pinchStrength;
@@ -255,40 +231,22 @@ namespace Oculus.Interaction.GrabAPI
             }
         }
 
-        private bool IsPointNearThumb(IHand hand, Vector3 position, HandJointId[] thumbJoints)
+        private float GetClosestDistanceToThumb(IHand hand, Vector3 position)
         {
-            if (!hand.GetJointPoseFromWrist(thumbJoints[0], out Pose boneStart))
+            float minDistance = float.MaxValue;
+            for (int i = 0; i < thumbJointList.Length - 1; i++)
             {
-                return false;
-            }
-            if (!hand.GetJointPoseFromWrist(thumbJoints[1], out Pose boneEnd))
-            {
-                return false;
-            }
-            Vector3 p0 = boneStart.position;
-            Vector3 p1 = boneEnd.position;
-            Vector3 lineVec = p1 - p0;
-            Vector3 fromP0 = position - p0;
-            Vector3 projectedPos = Vector3.Project(fromP0, lineVec.normalized);
-            return Vector3.Dot(projectedPos, lineVec) > 0;
-        }
-
-        private float GetClosestDistanceToThumb(IHand hand, Vector3 position, HandJointId[] thumbJoints)
-        {
-            float minDistance = float.PositiveInfinity;
-            for (int i = 0; i < thumbJoints.Length - 1; i++)
-            {
-                if (!hand.GetJointPoseFromWrist(thumbJoints[i], out Pose boneStart))
+                if (!hand.GetJointPoseFromWrist(thumbJointList[i], out Pose pose0))
                 {
-                    return float.PositiveInfinity;
+                    return float.MaxValue;
                 }
-                if (!hand.GetJointPoseFromWrist(thumbJoints[i + 1], out Pose boneEnd))
+                if (!hand.GetJointPoseFromWrist(thumbJointList[i + 1], out Pose pose1))
                 {
-                    return float.PositiveInfinity;
+                    return float.MaxValue;
                 }
 
                 minDistance = Mathf.Min(minDistance,
-                    ClosestDistanceToLineSegment(position, boneStart.position, boneEnd.position));
+                    ClosestDistanceToLineSegment(position, pose0.position, pose1.position));
             }
 
             return minDistance;
@@ -302,7 +260,6 @@ namespace Oculus.Interaction.GrabAPI
             float closestT = Mathf.Clamp01(normalizedProjection);
             Vector3 closestPoint = p0 + closestT * lineVec;
             return (closestPoint - position).magnitude;
-
         }
 
         private bool PinchHasGoodVisibility(IHand hand)

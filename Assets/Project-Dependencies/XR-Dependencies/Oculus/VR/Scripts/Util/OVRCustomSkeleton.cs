@@ -1,33 +1,29 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 
 [DefaultExecutionOrder(-80)]
-public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
+public class OVRCustomSkeleton : OVRSkeleton
 {
+	[SerializeField]
+	private bool _applyBoneTranslations = true;
+
 	[HideInInspector]
 	[SerializeField]
-	private List<Transform> _customBones_V2;
+	private List<Transform> _customBones_V2 = new List<Transform>(new Transform[(int)BoneId.Max]);
 
 #if UNITY_EDITOR
 
@@ -65,9 +61,9 @@ public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
 		"ring",
 		"pinky"
 	};
-#endif // UNITY_EDITOR
+#endif
 
-	public List<Transform> CustomBones => _customBones_V2;
+	public List<Transform> CustomBones { get { return _customBones_V2; } }
 
 #if UNITY_EDITOR
 	public void TryAutoMapBonesByName()
@@ -81,7 +77,6 @@ public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
 			{
 				string fbxBoneName = FbxBoneNameFromBoneId(skeletonType, (BoneId)bi);
 				Transform t = transform.FindChildRecursive(fbxBoneName);
-
 
 				if (t != null)
 				{
@@ -106,35 +101,29 @@ public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
 	}
 #endif
 
-	protected override Transform GetBoneTransform(BoneId boneId) => _customBones_V2[(int)boneId];
-
-#if UNITY_EDITOR
-	private bool _shouldSetDirty;
-
-	private void OnValidate()
+	protected override void InitializeBones()
 	{
-		if (!_shouldSetDirty) return;
+		bool flipX = (_skeletonType == SkeletonType.HandLeft || _skeletonType == SkeletonType.HandRight);
 
-		UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this);
-		UnityEditor.EditorUtility.SetDirty(this);
-		_shouldSetDirty = false;
-	}
-#endif
-
-	void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-	void ISerializationCallbackReceiver.OnAfterDeserialize()
-	{
-		if (_customBones_V2.Count == (int) BoneId.Max) return;
-
-		// Make sure we have the right number of bones
-		while (_customBones_V2.Count < (int) BoneId.Max)
+		if (_bones == null || _bones.Count != _skeleton.NumBones)
 		{
-			_customBones_V2.Add(null);
+			_bones = new List<OVRBone>(new OVRBone[_skeleton.NumBones]);
+			Bones = _bones.AsReadOnly();
 		}
 
-#if UNITY_EDITOR
-		_shouldSetDirty = true;
-#endif
+		for (int i = 0; i < _bones.Count; ++i)
+		{
+			OVRBone bone = _bones[i] ?? (_bones[i] = new OVRBone());
+			bone.Id = (OVRSkeleton.BoneId)_skeleton.Bones[i].Id;
+			bone.ParentBoneIndex = _skeleton.Bones[i].ParentBoneIndex;
+			bone.Transform = _customBones_V2[(int)bone.Id];
+
+			if (_applyBoneTranslations)
+			{
+				bone.Transform.localPosition = flipX ? _skeleton.Bones[i].Pose.Position.FromFlippedXVector3f() : _skeleton.Bones[i].Pose.Position.FromFlippedZVector3f();
+			}
+
+			bone.Transform.localRotation = flipX ? _skeleton.Bones[i].Pose.Orientation.FromFlippedXQuatf() : _skeleton.Bones[i].Pose.Orientation.FromFlippedZQuatf();
+		}
 	}
 }

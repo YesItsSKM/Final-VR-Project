@@ -1,29 +1,22 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * Licensed under the Oculus SDK License Agreement (the "License");
- * you may not use the Oculus SDK except in compliance with the License,
- * which is provided at the time of installation or download, or which
- * otherwise accompanies this software in either electronic or hard copy form.
- *
- * You may obtain a copy of the License at
- *
- * https://developer.oculus.com/licenses/oculussdk/
- *
- * Unless required by applicable law or agreed to in writing, the Oculus SDK
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
+using UnityEngine.Serialization;
 
 public class OVRTrackedKeyboard : MonoBehaviour
 {
@@ -32,8 +25,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 	private static readonly float underlayScaleMultZ_ = 2.138f;
 	private static readonly Vector3 underlayOffset_ = new Vector3 { x = 0.0f, y = 0.0f, z = -0.028f };
 	private static readonly float boundingBoxAboveKeyboardY_ = 0.08f;
-	private static readonly float initialHorizontalDistanceKeyboard_ = 0.30f; // 20 cm / 8 in
-	private static readonly float initialVerticalDistanceKeyboard_ = 0.45f; // 45 cm / 18 in
 
 	/// <summary>
 	/// Used by TrackingState property to give the current state of keyboard tracking.
@@ -170,25 +161,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 		}
 	}
 
-	/// <summary>
-	/// If true, will show the keyboard even if it is not currently connected or
-	/// visible to the cameras. This is mainly useful for testing the feature when
-	/// you don't have access to a physical keyboard. The keyboard that appears will
-	/// be based on which keyboard is selected in Settings on the headset. The
-	/// keyboard will appear in front of the user at waist level.
-	/// </summary>
-	public bool ShowUntracked
-	{
-		get
-		{
-			return showUntracked;
-		}
-		set
-		{
-			showUntracked = value;
-		}
-	}
-
 	public bool RemoteKeyboard
 	{
 		get
@@ -242,10 +214,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 	private bool connectionRequired = true;
 
 	[SerializeField]
-	[Tooltip("If true, keyboard will be displayed even if it is not currently connected or visible.")]
-	private bool showUntracked = false;
-
-	[SerializeField]
 	[Tooltip("Which type of keyboard you wish to use.")]
 	private OVRPlugin.TrackedKeyboardQueryFlags keyboardQueryFlags = OVRPlugin.TrackedKeyboardQueryFlags.Local;
 
@@ -266,23 +234,15 @@ public class OVRTrackedKeyboard : MonoBehaviour
 	/// </summary>
 	[Tooltip("The shader used for rendering the keyboard model")]
 	public Shader keyboardModelShader;
-
-	/// <summary>
-	/// The shader used for rendering transparent parts of the keyboard model in opaque mode.
-	/// </summary>
-	[Tooltip("The shader used for rendering transparent parts of the keyboard model")]
-	public Shader keyboardModelAlphaBlendShader;
 #endregion
 
 	private OVRPlugin.TrackedKeyboardPresentationStyles currentKeyboardPresentationStyles = 0;
 	private OVROverlay projectedPassthroughOpaque_;
 	private MeshRenderer[] activeKeyboardRenderers_;
 	private GameObject activeKeyboardMesh_;
-	private GameObject[] keyboardMeshNodes_;
 	private MeshRenderer activeKeyboardMeshRenderer_;
 	private GameObject passthroughQuad_;
 	private Shader opaqueShader_;
-	private Vector3 untrackedPosition_;
 
 	// These properties generally don't need to be modified by the user of the prefab
 
@@ -488,12 +448,12 @@ public class OVRTrackedKeyboard : MonoBehaviour
 				}
 
 				bool keyboardExists = (keyboardInfo.KeyboardFlags & OVRPlugin.TrackedKeyboardFlags.Exists) != 0;
-				if ((keyboardExists && trackingEnabled) || showUntracked)
+				if (keyboardExists && trackingEnabled)
 				{
 					bool localKeyboard = (keyboardInfo.KeyboardFlags & OVRPlugin.TrackedKeyboardFlags.Local) != 0;
 					bool remoteKeyboard = (keyboardInfo.KeyboardFlags & OVRPlugin.TrackedKeyboardFlags.Remote) != 0;
 					bool connectedKeyboard = (keyboardInfo.KeyboardFlags & OVRPlugin.TrackedKeyboardFlags.Connected) != 0;
-					bool shouldBeRunning = remoteKeyboard || (localKeyboard && (!connectionRequired || connectedKeyboard)) || showUntracked;
+					bool shouldBeRunning = remoteKeyboard || (localKeyboard && (!connectionRequired || connectedKeyboard));
 
 					if(KeyboardTrackerIsRunning() && (systemKeyboardSwitched || !shouldBeRunning))
 					{
@@ -554,12 +514,8 @@ public class OVRTrackedKeyboard : MonoBehaviour
 
 		if (!OVRPlugin.StartKeyboardTracking(SystemKeyboardInfo.Identifier))
 		{
-			if (!showUntracked)
-			{
-				Debug.LogWarning("OVRKeyboard.StartKeyboardTracking Failed");
-				SetKeyboardState(TrackedKeyboardState.Error);
-				yield break;
-			}
+			Debug.LogWarning("OVRKeyboard.StartKeyboardTracking Failed");
+			yield break;
 		}
 
 		projectedPassthroughRoot.localScale = new Vector3 { x = SystemKeyboardInfo.Dimensions.x * underlayScaleMultX_, y = underlayScaleConstY_, z = SystemKeyboardInfo.Dimensions.z * underlayScaleMultZ_ };
@@ -604,8 +560,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 			keyboardBoundingBox_ = null;
 		}
 
-		untrackedPosition_ = Vector3.zero;
-
 		SetKeyboardState(TrackedKeyboardState.Offline);
 	}
 
@@ -617,26 +571,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 			transform.rotation = cameraRig_.trackingSpace.transform.rotation;
 
 			var poseState = OVRKeyboard.GetKeyboardState();
-
-			// Emulate tracking when showUntracked is set
-			if ((!poseState.isPositionValid || !poseState.isPositionTracked) && showUntracked)
-			{
-				poseState.isPositionValid = true;
-				poseState.isPositionTracked = true;
-
-				if (untrackedPosition_ == Vector3.zero && Camera.main != null)
-				{
-					// Start keyboard in a nice position at waist level in front
-					Transform cameraTransform = Camera.main.transform;
-					Vector3 cameraDirectionHorizontal =
-						Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
-					untrackedPosition_ = cameraTransform.position +
-					                     cameraDirectionHorizontal * initialHorizontalDistanceKeyboard_ +
-					                     new Vector3(0.0f, -initialVerticalDistanceKeyboard_, 0.0f);
-				}
-				poseState.position = untrackedPosition_;
-			}
-
 			TrackedKeyboardState keyboardState = TrackedKeyboardState.StartedNotTracked;
 
 			if (poseState.isPositionValid)
@@ -713,15 +647,7 @@ public class OVRTrackedKeyboard : MonoBehaviour
 		if(activeKeyboardMesh_ == null) {
 			Debug.LogError("Failed to load keyboard mesh.");
 			SetKeyboardState(TrackedKeyboardState.Error);
-			return;
 		}
-
-		keyboardMeshNodes_ = new GameObject[activeKeyboardMesh_.transform.childCount];
-		for (int i = 0; i < activeKeyboardMesh_.transform.childCount; i++)
-		{
-			keyboardMeshNodes_[i] = activeKeyboardMesh_.transform.GetChild(i).gameObject;
-		}
-
 		keyboardBoundingBox_ = activeKeyboardMesh_.AddComponent<BoxCollider>();
 
 		keyboardBoundingBox_.center =
@@ -731,14 +657,7 @@ public class OVRTrackedKeyboard : MonoBehaviour
 				ActiveKeyboardInfo.Dimensions.y + boundingBoxAboveKeyboardY_,
 				ActiveKeyboardInfo.Dimensions.z);
 
-		activeKeyboardMeshRenderer_ = keyboardMeshNodes_[0].GetComponentInChildren<MeshRenderer>();
-		if (activeKeyboardMeshRenderer_ == null)
-		{
-			Debug.LogError("Failed to load activeKeyboardMeshRenderer_.");
-			SetKeyboardState(TrackedKeyboardState.Error);
-			return;
-		}
-
+		activeKeyboardMeshRenderer_ = activeKeyboardMesh_.GetComponentInChildren<MeshRenderer>();
 		opaqueShader_ = activeKeyboardMeshRenderer_.material.shader;
 		activeKeyboardMeshRenderer_.material.shader = KeyLabelModeShader;
 
@@ -761,8 +680,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 
 		activeKeyboardRenderers_ = activeKeyboardMesh_.GetComponentsInChildren<MeshRenderer>();
 		activeKeyboardMesh_.transform.SetParent(ActiveKeyboardTransform, worldPositionStays: false);
-
-		ActiveKeyboardTransform.localRotation = Quaternion.identity;
 
 		UpdateKeyboardVisibility();
 	}
@@ -791,19 +708,11 @@ public class OVRTrackedKeyboard : MonoBehaviour
 			passthroughQuad_.SetActive(false);
 			projectedPassthroughOpaque_.hidden = !GetKeyboardVisibility() || !HandsOverKeyboard;
 			ProjectedPassthroughKeyLabel.hidden = true;
-			for (int i=1; i < keyboardMeshNodes_.Length; i++)
-			{
-				keyboardMeshNodes_[i].SetActive(true);
-			}
 		} else {
 			activeKeyboardMeshRenderer_.material.shader = KeyLabelModeShader;
 			passthroughQuad_.SetActive(true);
 			projectedPassthroughOpaque_.hidden = true;
 			ProjectedPassthroughKeyLabel.hidden = false; // Always shown
-			for (int i=1; i < keyboardMeshNodes_.Length; i++)
-			{
-				keyboardMeshNodes_[i].SetActive(false);
-			}
 		}
 	}
 
@@ -815,8 +724,7 @@ public class OVRTrackedKeyboard : MonoBehaviour
 		{
 			for (int i = 0; i < modelPaths.Length; i++)
 			{
-				if ((RemoteKeyboard && modelPaths[i].Equals("/model_fb/keyboard/remote")) ||
-					(!RemoteKeyboard && modelPaths[i].Equals("/model_fb/keyboard/local")))
+				if (modelPaths[i].Equals("/model_fb/keyboard/local"))
 				{
 					OVRPlugin.RenderModelProperties modelProps = new OVRPlugin.RenderModelProperties();
 					if (OVRPlugin.GetRenderModelProperties(modelPaths[i], ref modelProps))
@@ -828,7 +736,6 @@ public class OVRTrackedKeyboard : MonoBehaviour
 							{
 								OVRGLTFLoader gltfLoader = new OVRGLTFLoader(data);
 								gltfLoader.SetModelShader(keyboardModelShader);
-								gltfLoader.SetModelAlphaBlendShader(keyboardModelAlphaBlendShader);
 								OVRGLTFScene scene = gltfLoader.LoadGLB(false);
 								return scene.root;
 							}
