@@ -19,6 +19,7 @@
  */
 
 using Oculus.Interaction.Input;
+using System;
 using UnityEngine;
 
 namespace Oculus.Interaction.HandGrab.Visuals
@@ -50,6 +51,11 @@ namespace Oculus.Interaction.HandGrab.Visuals
         public HandGhost GetHand(Handedness handedness)
         {
             return handedness == Handedness.Left ? _leftHand : _rightHand;
+        }
+
+        public static void TryGetDefault(out HandGhostProvider ghostProvider)
+        {
+            throw new NotImplementedException();
         }
     }
 }
